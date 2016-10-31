@@ -1,8 +1,9 @@
 ###
-# App
+# Dev Files
 ###
 
 *.sqlite3
+_media/
 
 
 ###
