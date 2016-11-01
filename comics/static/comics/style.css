@@ -1,0 +1,45 @@
+.flow_grid {
+  display: flex;
+  flex-flow: row wrap;
+  margin-left: -0.5rem;
+  margin-right: -0.5rem;
+}
+
+.flow_cell {
+  box-sizing: border-box;
+  flex: 1 0 20%;
+  min-width: 5em;
+  padding: 0 0.5rem 1rem;
+  position: relative;
+}
+
+.flow_cell img {
+  width: 100%;
+}
+
+
+.issue_cell {
+  min-width: 10em;
+}
+
+.no_cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.page_number {
+  background: #ccc;
+  color: #222;
+  opacity: .6;
+
+  font-size: .8rem;
+  border-radius: 50%;
+  height: auto;
+  padding: .25rem;
+
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+}

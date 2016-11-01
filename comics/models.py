@@ -52,6 +52,9 @@ class Issue(models.Model):
         default=True,
     )
 
+    def cover(self):
+        return self.page_set.first().image
+
     def __str__(self):
         return "{} #{}".format(self.series.name, self.number)
 
