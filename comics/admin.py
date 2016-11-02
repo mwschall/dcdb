@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from .models import Issue, Series, SourceImage
+from .models import Installment, Story, SourceImage
 
 
 def parse_pages(obj, page_files):
@@ -38,7 +38,7 @@ def parse_pages(obj, page_files):
     return info
 
 
-class IssueAdminForm(forms.ModelForm):
+class InstallmentAdminForm(forms.ModelForm):
 
     page_files = forms.FileField(
         widget=forms.ClearableFileInput(attrs={'multiple': True}),
@@ -46,12 +46,12 @@ class IssueAdminForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Issue
+        model = Installment
         fields = '__all__'
 
 
-class IssueAdmin(admin.ModelAdmin):
-    form = IssueAdminForm
+class InstallmentAdmin(admin.ModelAdmin):
+    form = InstallmentAdminForm
     readonly_fields = ('has_cover',)
 
     @transaction.atomic
@@ -80,5 +80,5 @@ class IssueAdmin(admin.ModelAdmin):
             obj.save()
 
 
-admin.site.register(Issue, IssueAdmin)
-admin.site.register(Series)
+admin.site.register(Installment, InstallmentAdmin)
+admin.site.register(Story)

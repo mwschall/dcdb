@@ -12,8 +12,8 @@ def gen_src_loc(instance, filename):
     owner = instance.owner
     ext = os.path.splitext(filename)[1]
     if isinstance(owner, Page):
-        return "issues/{}/{:04d}{}".format(
-            owner.issue.slug,
+        return "installments/{}/{:04d}{}".format(
+            owner.installment.slug,
             owner.order,
             ext,
         )
@@ -24,7 +24,7 @@ def gen_src_loc(instance, filename):
         )
 
 
-class Series(models.Model):
+class Story(models.Model):
     name = models.CharField(
         max_length=200,
     )
@@ -38,12 +38,12 @@ class Series(models.Model):
         return "{} [{}]".format(self.name, self.slug)
 
     class Meta:
-        verbose_name_plural = "series"
+        verbose_name_plural = "stories"
 
 
-class Issue(models.Model):
-    series = models.ForeignKey(
-        'Series',
+class Installment(models.Model):
+    story = models.ForeignKey(
+        'Story',
         models.CASCADE
     )
     number = models.CharField(
@@ -70,23 +70,23 @@ class Issue(models.Model):
     @property
     def slug(self):
         # TODO: any way to check if number is sequential and zero-pad?
-        return "{}_{}".format(self.series.slug, self.number)
+        return "{}_{}".format(self.story.slug, self.number)
 
     def __str__(self):
-        return "{} #{}".format(self.series.name, self.number)
+        return "{} #{}".format(self.story.name, self.number)
 
     class Meta:
-        unique_together = ('series', 'number')
-        ordering = ['series', 'number']
+        unique_together = ('story', 'number')
+        ordering = ['story', 'number']
 
 
 class Page(models.Model):
-    issue = models.ForeignKey(
-        'Issue',
+    installment = models.ForeignKey(
+        'Installment',
         models.CASCADE,
     )
     order = models.PositiveSmallIntegerField(
-        help_text='The 0-indexed ordering within parent Issue.',
+        help_text='The 0-indexed ordering within parent Installment.',
         default=0,
         editable=False,
     )
