@@ -1,10 +1,12 @@
 {% extends 'comics/base.html' %}
 
+{% load comics_extras %}
+
 {% block content %}
   <div class="flow_grid">
   {% for page in issue.page_set.all %}
     <div class="flow_cell page_cell">
-      <span class="page_number">{{ page.number|stringformat:"03d" }}</span>
+      <span class="page_number">{{ page|page_num }}</span>
       <img class="page_image" src="{{ page.image.url }}" />
     </div>
   {% endfor %}

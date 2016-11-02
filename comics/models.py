@@ -1,18 +1,27 @@
 import os
 
+import shortuuid
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
 
-def generate_page_name(self, filename):
-    url = "issues/{}_{}/{:03d}{}".format(
-        self.issue.series.slug,
-        self.issue.number,
-        int(self.number),
-        os.path.splitext(filename)[1]
-    )
-    return url
+def gen_src_loc(instance, filename):
+    owner = instance.owner
+    ext = os.path.splitext(filename)[1]
+    if isinstance(owner, Page):
+        return "issues/{}/{:04d}{}".format(
+            owner.issue.slug,
+            owner.order,
+            ext,
+        )
+    else:
+        return "images/{}{}".format(
+            shortuuid.uuid(),
+            ext,
+        )
 
 
 class Series(models.Model):
@@ -48,18 +57,27 @@ class Issue(models.Model):
     has_cover = models.BooleanField(
         default=True,
     )
-    paginated = models.BooleanField(
-        default=True,
-    )
 
+    @property
     def cover(self):
-        return self.page_set.first().image
+        return self.page_set.first().image if self.has_cover else None
+
+    @property
+    def is_paginated(self):
+        # TODO: this is stupidly inefficient
+        return self.page_set.count() > 1
+
+    @property
+    def slug(self):
+        # TODO: any way to check if number is sequential and zero-pad?
+        return "{}_{}".format(self.series.slug, self.number)
 
     def __str__(self):
         return "{} #{}".format(self.series.name, self.number)
 
     class Meta:
         unique_together = ('series', 'number')
+        ordering = ['series', 'number']
 
 
 class Page(models.Model):
@@ -67,20 +85,63 @@ class Page(models.Model):
         'Issue',
         models.CASCADE,
     )
-    number = models.PositiveSmallIntegerField()
-    image = models.ImageField(
-        upload_to=generate_page_name
-
+    order = models.PositiveSmallIntegerField(
+        help_text='The 0-indexed ordering within parent Issue.',
+        default=0,
+        editable=False,
+    )
+    number = models.PositiveSmallIntegerField(
+        help_text="Essentially, the page 'name'.",
+    )
+    images = GenericRelation(
+        'SourceImage',
+        related_query_name='pages',
     )
 
+    @property
+    def is_cover(self):
+        # TODO: does this need to be more robust?
+        return self.number == 0
+
+    @property
+    def image(self):
+        return self.images.first()
+
     def __str__(self):
-        return "{:03d}".format(self.number)
+        # TODO: keep number or use order?
+        return "{}".format(self.number)
 
     class Meta:
-        unique_together = ('issue', 'number')
+        # NOTE: don't add order to uniqueness constraint (See: goo.gl/nnctw0)
+        ordering = ['order']
 
 
-# http://stackoverflow.com/questions/5372934/how-do-i-get-django-admin-to-delete-files-when-i-remove-an-object-from-the-datab
-@receiver(post_delete, sender=Page)
-def page_post_delete_handler(sender, **kwargs):
-    kwargs['instance'].image.delete(save=False)
+class SourceImage(models.Model):
+    content_type = models.ForeignKey(
+        ContentType,
+        models.CASCADE,
+    )
+    object_id = models.PositiveIntegerField()
+    owner = GenericForeignKey()
+
+    file = models.ImageField(
+        upload_to=gen_src_loc
+    )
+    # TODO: do we /really/ care about this?
+    # http://stackoverflow.com/questions/4892729/
+    original_name = models.CharField(
+        max_length=260
+    )
+
+    @property
+    def url(self):
+        return self.file.url
+
+    class Meta:
+        unique_together = ('content_type', 'object_id')
+
+
+# http://stackoverflow.com/questions/5372934/
+@receiver(post_delete, sender=SourceImage)
+def image_post_delete_handler(sender, **kwargs):
+    kwargs['instance'].file.delete(save=False)
