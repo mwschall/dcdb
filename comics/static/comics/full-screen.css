@@ -1,0 +1,70 @@
+html, body, .viewport {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.viewport {
+  background: #000;
+  user-select: none;
+}
+
+.viewport img {
+  margin: auto;
+  max-height: 100%;
+  max-width: 100%;
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+}
+
+a {
+  text-decoration: none;
+}
+
+.icon {
+  font-size: 3rem;
+  color: #222;
+  text-shadow: -1px 0 #ddd, 0 1px #ddd, 1px 0 #ddd, 0 -1px #ddd;
+  opacity: .1;
+}
+:hover > .icon  {
+  opacity: .5;
+}
+
+.arrow {
+  position: absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+
+  width: 20%;
+}
+.left.arrow {
+  right: auto;
+}
+.right.arrow {
+  left: auto;
+}
+
+.arrow .icon {
+  position: absolute;
+  top: 50%;
+  margin-top: -1.5rem;
+}
+.left.arrow .icon {
+  left: 5%;
+}
+.right.arrow .icon {
+  right: 5%;
+}
+
+.close {
+  position: absolute;
+  top: .5rem;
+  left: .5rem;
+  padding: 1rem;
+}

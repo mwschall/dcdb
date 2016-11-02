@@ -63,9 +63,13 @@ class Installment(models.Model):
         return self.page_set.first().image if self.has_cover else None
 
     @property
+    def num_pages(self):
+        return self.page_set.count()
+
+    @property
     def is_paginated(self):
         # TODO: this is stupidly inefficient
-        return self.page_set.count() > 1
+        return self.num_pages > 1
 
     @property
     def slug(self):
