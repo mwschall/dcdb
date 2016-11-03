@@ -18,6 +18,10 @@
 }
 
 
+.credit_cell {
+  text-align: center;
+}
+
 .issue_cell {
   min-width: 10em;
 }

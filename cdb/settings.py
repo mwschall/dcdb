@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'people.apps.PeopleConfig',
     'comics.apps.ComicsConfig',
 
     'django.contrib.admin',

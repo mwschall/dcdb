@@ -3,6 +3,7 @@
 ###
 
 *.sqlite3
+_data/
 _media/
 
 

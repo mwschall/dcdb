@@ -7,6 +7,24 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
+from people.models import Credit
+
+
+# TODO: ra ra efficiency, either prefetch_related or merge in DB
+def get_full_credits(m):
+    credit_set = set()
+
+    if isinstance(m, Page):
+        credit_set = credit_set | set(m.credits.all())
+        m = m.installment
+    if isinstance(m, Installment):
+        credit_set = credit_set | set(m.credits.all())
+        m = m.story
+    if isinstance(m, Story):
+        credit_set = credit_set | set(m.credits.all())
+
+    return list(credit_set)
+
 
 def gen_src_loc(instance, filename):
     owner = instance.owner
@@ -34,11 +52,13 @@ class Story(models.Model):
         unique=True,
     )
 
-    def __str__(self):
-        return "{} [{}]".format(self.name, self.slug)
+    credits = GenericRelation(Credit)
 
     class Meta:
         verbose_name_plural = "stories"
+
+    def __str__(self):
+        return "{} [{}]".format(self.name, self.slug)
 
 
 class Installment(models.Model):
@@ -58,6 +78,15 @@ class Installment(models.Model):
         default=True,
     )
 
+    credits = GenericRelation(Credit)
+
+    class Meta:
+        unique_together = ('story', 'number')
+        ordering = ['story', 'number']
+
+    def __str__(self):
+        return "{} #{}".format(self.story.name, self.number)
+
     @property
     def cover(self):
         return self.page_set.first().image if self.has_cover else None
@@ -75,13 +104,6 @@ class Installment(models.Model):
     def slug(self):
         # TODO: any way to check if number is sequential and zero-pad?
         return "{}_{}".format(self.story.slug, self.number)
-
-    def __str__(self):
-        return "{} #{}".format(self.story.name, self.number)
-
-    class Meta:
-        unique_together = ('story', 'number')
-        ordering = ['story', 'number']
 
 
 class Page(models.Model):
@@ -102,6 +124,16 @@ class Page(models.Model):
         related_query_name='pages',
     )
 
+    credits = GenericRelation(Credit)
+
+    class Meta:
+        # NOTE: don't add order to uniqueness constraint (See: goo.gl/nnctw0)
+        ordering = ['order']
+
+    def __str__(self):
+        # TODO: keep number or use order?
+        return "{}".format(self.number)
+
     @property
     def is_cover(self):
         # TODO: does this need to be more robust?
@@ -110,14 +142,6 @@ class Page(models.Model):
     @property
     def image(self):
         return self.images.first()
-
-    def __str__(self):
-        # TODO: keep number or use order?
-        return "{}".format(self.number)
-
-    class Meta:
-        # NOTE: don't add order to uniqueness constraint (See: goo.gl/nnctw0)
-        ordering = ['order']
 
 
 class SourceImage(models.Model):
@@ -137,12 +161,12 @@ class SourceImage(models.Model):
         max_length=260
     )
 
+    class Meta:
+        unique_together = ('content_type', 'object_id')
+
     @property
     def url(self):
         return self.file.url
-
-    class Meta:
-        unique_together = ('content_type', 'object_id')
 
 
 # http://stackoverflow.com/questions/5372934/
