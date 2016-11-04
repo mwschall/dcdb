@@ -1,4 +1,5 @@
 Django==1.10.2
+inflect==0.2.5
 Pillow==3.4.2
 pytz==2016.7
 shortuuid==0.4.3

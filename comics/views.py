@@ -1,23 +1,27 @@
 import itertools
 
+import inflect
 from django.shortcuts import render, get_object_or_404
+from django.utils.translation import ugettext as _, ungettext
 
 from .models import Installment, Page, get_full_credits
+
+p = inflect.engine()
 
 
 # See also: http://stackoverflow.com/questions/480214/
 def gen_credit_list(item):
     credit_list = get_full_credits(item)
     if len({c.entity for c in credit_list}) == 1:
-        return [("by", credit_list[0].entity)]
+        return [(_("by"), credit_list[0].entity)]
     else:
         # TODO: sort by role importance
-        return [
-            # TODO: i18n the Role name and handle plurals
-            (str(t), ", ".join(sorted(map(lambda c: str(c.entity), rcl))))
-            for t, rcl
+        raw = [
+            (str(r), sorted(map(lambda c: str(c.entity), rcl)))
+            for r, rcl
             in itertools.groupby(credit_list, lambda c: c.role)
         ]
+        return [(ungettext(r, p.plural(r), len(el)), ", ".join(el)) for r, el in raw]
 
 
 def index(request):
