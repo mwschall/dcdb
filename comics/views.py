@@ -21,24 +21,24 @@ def gen_credit_list(item):
 
 
 def index(request):
-    issues = Installment.objects.all()
-    context = {'issues': issues}
+    installments = Installment.objects.all()
+    context = {'installments': installments}
     return render(request, 'comics/index.html', context)
 
 
-def issue_detail(request, issue_id):
-    issue = get_object_or_404(Installment, pk=issue_id)
+def installment_detail(request, installment_id):
+    installment = get_object_or_404(Installment, pk=installment_id)
     context = {
-        'issue': issue,
-        'credits': gen_credit_list(issue),
-        'pages': issue.page_set.all,
+        'installment': installment,
+        'credits': gen_credit_list(installment),
+        'pages': installment.page_set.all,
     }
-    return render(request, 'comics/issue.html', context)
+    return render(request, 'comics/installment.html', context)
 
 
-def page_detail(request, issue_id, page_idx):
+def ins_page_detail(request, installment_id, page_idx):
     page_idx = int(page_idx)
-    page = get_object_or_404(Page, installment_id=issue_id, order=page_idx)
+    page = get_object_or_404(Page, installment_id=installment_id, order=page_idx)
     prev_idx = page_idx - 1 if page_idx > 0 else None
     next_idx = page_idx + 1 if page_idx < page.installment.num_pages - 1 else None
     context = {

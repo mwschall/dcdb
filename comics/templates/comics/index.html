@@ -1,15 +1,15 @@
-{% extends 'comics/base.html' %}
+{% extends 'comics/_standard.html' %}
 
 {% block content %}
   <div class="flow_grid">
-  {% for issue in issues %}
-    {% if issue.has_cover %}
-      <a class="flow_cell issue_cell" href="{% url 'comics:issue' issue.id %}">
-        <img class="issue_cover" src="{{ issue.cover.url }}" />
+  {% for installment in installments %}
+    {% if installment.has_cover %}
+      <a class="flow_cell issue_cell" href="{% url 'comics:installment' installment.id %}">
+        <img class="issue_cover" src="{{ installment.cover.url }}" />
       </a>
     {% else %}
-      <a class="flow_cell issue_cell no_cover" href="{% url 'comics:issue' issue.id %}">
-        <h3 class="issue_title">{{ issue }}</h3>
+      <a class="flow_cell issue_cell no_cover" href="{% url 'comics:installment' installment.id %}">
+        <h3 class="issue_title">{{ installment }}</h3>
       </a>
     {% endif %}
   {% endfor %}

@@ -1,4 +1,4 @@
-{% extends 'comics/base.html' %}
+{% extends 'comics/_standard.html' %}
 
 {% load comics_extras %}
 
@@ -10,7 +10,7 @@
   </div>
   <div class="flow_grid">
   {% for page in pages %}
-    <a class="flow_cell page_cell" href="{% url 'comics:page' issue.id page.order %}">
+    <a class="flow_cell page_cell" href="{% url 'comics:page' installment.id page.order %}">
       <span class="page_number">{{ page|page_num }}</span>
       <img class="page_image" src="{{ page.image.url }}" />
     </a>

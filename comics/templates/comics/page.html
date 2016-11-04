@@ -1,27 +1,26 @@
+{% extends 'comics/_base.html' %}
+
 {% load static %}
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Digital Comic DB</title>
+
+{% block skeletoncss %}
   <link rel="stylesheet" href="{% static 'comics/full-screen.css' %}" />
+{% endblock %}
 
-</head>
-<body class="viewport">
-
-<img class="page_image" src="{{ page.image.url }}" />
-{% if prev_idx != None %}
-  <a class="left arrow" href="{% url 'comics:page' page.installment_id prev_idx %}">
-    <span class="icon">◀</span>
+{% block skeletoncontent %}
+<div class="viewport">
+  <img class="page_image" src="{{ page.image.url }}" />
+  {% if prev_idx != None %}
+    <a class="left arrow" href="{% url 'comics:page' page.installment_id prev_idx %}">
+      <span class="icon">◀</span>
+    </a>
+  {% endif %}
+  {% if next_idx != None %}
+    <a class="right arrow" href="{% url 'comics:page' page.installment_id next_idx %}">
+      <span class="icon">▶</span>
+    </a>
+  {% endif %}
+  <a class="close" href="{% url 'comics:installment' page.installment_id %}">
+    <span class="icon">✘</span>
   </a>
-{% endif %}
-{% if next_idx != None %}
-  <a class="right arrow" href="{% url 'comics:page' page.installment_id next_idx %}">
-    <span class="icon">▶</span>
-  </a>
-{% endif %}
-<a class="close" href="{% url 'comics:issue' page.installment_id %}">
-  <span class="icon">✘</span>
-</a>
-
-</body>
-</html>
+</div>
+{% endblock %}
