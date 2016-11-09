@@ -9,17 +9,17 @@
 {% block skeletoncontent %}
 <div class="viewport">
   <img class="page_image" src="{{ page.image.url }}" />
-  {% if prev_idx != None %}
-    <a class="left arrow" href="{% url 'comics:page' page.installment_id prev_idx %}">
+  {% if prev_url != None %}
+    <a class="left arrow" href="{{ prev_url }}">
       <span class="icon">◀</span>
     </a>
   {% endif %}
-  {% if next_idx != None %}
-    <a class="right arrow" href="{% url 'comics:page' page.installment_id next_idx %}">
+  {% if next_url != None %}
+    <a class="right arrow" href="{{ next_url }}">
       <span class="icon">▶</span>
     </a>
   {% endif %}
-  <a class="close" href="{% url 'comics:installment' page.installment_id %}">
+  <a class="close" href="{{ installment_url }}">
     <span class="icon">✘</span>
   </a>
 </div>

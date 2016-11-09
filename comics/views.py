@@ -2,8 +2,13 @@ import itertools
 
 import inflect
 from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
 from django.utils.translation import ugettext as _, ungettext
+from rest_framework.decorators import api_view, renderer_classes
+from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
+from rest_framework.response import Response
 
+from comics.serializers import PageSerializer
 from .models import Installment, Page, get_full_credits
 
 p = inflect.engine()
@@ -24,12 +29,36 @@ def gen_credit_list(item):
         return [(ungettext(r, p.plural(r), len(el)), ", ".join(el)) for r, el in raw]
 
 
+def gen_page_links(page):
+    installment_id = page.installment.id
+    page_idx = page.order
+    last_page = page.installment.num_pages - 1
+
+    def page_link(page_num):
+        return reverse('comics:page', args=[installment_id, page_num])
+
+    data = {
+        'first_url': page_link(0),
+        'last_url': page_link(last_page),
+        'installment_url': reverse('comics:installment', args=[installment_id]),
+    }
+
+    if page_idx > 0:
+        data.update({'prev_url': page_link(page_idx-1)})
+    if page_idx < last_page:
+        data.update({'next_url': page_link(page_idx+1)})
+
+    return data
+
+
+@api_view(['GET'])
 def index(request):
     installments = Installment.objects.all()
     context = {'installments': installments}
     return render(request, 'comics/index.html', context)
 
 
+@api_view(['GET'])
 def installment_detail(request, installment_id):
     installment = get_object_or_404(Installment, pk=installment_id)
     context = {
@@ -40,14 +69,22 @@ def installment_detail(request, installment_id):
     return render(request, 'comics/installment.html', context)
 
 
-def ins_page_detail(request, installment_id, page_idx):
-    page_idx = int(page_idx)
+@api_view(['GET'])
+@renderer_classes([TemplateHTMLRenderer, JSONRenderer])
+def installment_page(request, installment_id, page_idx):
     page = get_object_or_404(Page, installment_id=installment_id, order=page_idx)
-    prev_idx = page_idx - 1 if page_idx > 0 else None
-    next_idx = page_idx + 1 if page_idx < page.installment.num_pages - 1 else None
-    context = {
-        'page': page,
-        'prev_idx': prev_idx,
-        'next_idx': next_idx,
-    }
-    return render(request, 'comics/page.html', context)
+
+    if request.accepted_renderer.format == 'json':
+        serializer = PageSerializer(instance=page)
+        data = serializer.data
+    else:
+        data = {
+            'page': page
+        }
+
+    data.update(gen_page_links(page))
+
+    return Response(data, template_name='comics/page.html')
+
+
+
