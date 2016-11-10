@@ -1,11 +1,13 @@
 var path = require('path')
 var webpack = require('webpack')
+var BundleTracker = require('webpack-bundle-tracker')
 
 module.exports = {
+  context: __dirname,
   entry: './src/main.js',
   output: {
-    path: path.resolve(__dirname, './dist'),
-    publicPath: '/dist/',
+    path: path.resolve('./assets/'),
+    publicPath: 'http://localhost:8080/static/', // used by render_bundle in Django
     filename: 'build.js'
   },
   module: {
@@ -36,6 +38,9 @@ module.exports = {
       'vue$': 'vue/dist/vue'
     }
   },
+  plugins: [
+    new BundleTracker({filename: './webpack-stats.json'})
+  ],
   devServer: {
     historyApiFallback: true,
     noInfo: true

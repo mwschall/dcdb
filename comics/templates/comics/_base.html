@@ -5,10 +5,13 @@
   <meta charset="utf-8">
   <title>Digital Comic DB</title>
   <meta name='viewport' content='width=device-width, initial-scale=1'>
+  {% block skeletonmeta %}{% endblock %}
   <link rel="stylesheet" href="{% static 'comics/base.css' %}" />
   {% block skeletoncss %}{% endblock %}
 </head>
 <body>
+{% block skeletonprecontent %}{% endblock %}
 {% block skeletoncontent %}{% endblock %}
+{% block skeletonpostcontent %}{% endblock %}
 </body>
 </html>

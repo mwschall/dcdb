@@ -1,26 +1,38 @@
 {% extends 'comics/_base.html' %}
 
 {% load static %}
+{% load comics_extras %}
+{% load render_bundle from webpack_loader %}
 
 {% block skeletoncss %}
   <link rel="stylesheet" href="{% static 'comics/full-screen.css' %}" />
 {% endblock %}
 
+{% block skeletonprecontent %}
+<script>
+  window.__INITIAL_STATE__ = {"page":{{ page|json }},"links":{{ links|json }}};
+</script>
+{% endblock %}
+
 {% block skeletoncontent %}
-<div class="viewport">
-  <img class="page_image" src="{{ page.image.url }}" />
-  {% if prev_url != None %}
-    <a class="left arrow" href="{{ prev_url }}">
+<div id="app" class="viewport">
+  <img class="page_image" src="{{ page.image_url }}" />
+  {% if links.prev_url != None %}
+    <a class="left arrow" href="{{ links.prev_url }}">
       <span class="icon">◀</span>
     </a>
   {% endif %}
-  {% if next_url != None %}
-    <a class="right arrow" href="{{ next_url }}">
+  {% if links.next_url != None %}
+    <a class="right arrow" href="{{ links.next_url }}">
       <span class="icon">▶</span>
     </a>
   {% endif %}
-  <a class="close" href="{{ installment_url }}">
+  <a class="close" href="{{ links.installment_url }}">
     <span class="icon">✘</span>
   </a>
 </div>
+{% endblock %}
+
+{% block skeletonpostcontent %}
+  {% render_bundle 'main' 'js' %}
 {% endblock %}

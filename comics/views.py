@@ -74,17 +74,14 @@ def installment_detail(request, installment_id):
 def installment_page(request, installment_id, page_idx):
     page = get_object_or_404(Page, installment_id=installment_id, order=page_idx)
 
-    if request.accepted_renderer.format == 'json':
-        serializer = PageSerializer(instance=page)
-        data = serializer.data
-    else:
-        data = {
-            'page': page
-        }
+    serializer = PageSerializer(instance=page)
 
-    data.update(gen_page_links(page))
+    context = {
+        'page': serializer.data,
+        'links': gen_page_links(page)
+    }
 
-    return Response(data, template_name='comics/page.html')
+    return Response(context, template_name='comics/page.html')
 
 
 

@@ -1,7 +1,21 @@
 import Vue from 'vue'
-import App from './App.vue'
+import VueRouter from 'vue-router'
 
-new Vue({
-  el: '#app',
-  render: h => h(App)
+import Viewer from './Viewer.vue'
+
+
+Vue.use(VueRouter)
+
+const routes = [
+  { path: '/comics/installment/:installment/page/:page', component: Viewer }
+]
+
+const router = new VueRouter({
+  routes,
+  mode: 'history'
 })
+
+const app = new Vue({
+  router,
+  template: `<router-view></router-view>`
+}).$mount('#app')

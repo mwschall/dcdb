@@ -5,6 +5,7 @@
 *.sqlite3
 _data/
 _media/
+webpack-stats.json
 
 
 
