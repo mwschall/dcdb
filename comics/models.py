@@ -6,6 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.utils.text import Truncator
 
 from people.models import Credit
 
@@ -14,6 +15,17 @@ RTL = 'RTL'
 FLIP_DIRECTION_CHOICES = (
     (LTR, 'Left-to-Right'),
     (RTL, 'Right-to-Left'),
+)
+
+FREEFORM = 'F'
+STORY = 'S'
+VOLUME = 'V',
+ARC = 'A',
+THREAD_TYPE_CHOICES = (
+    (FREEFORM, 'Freeform'),
+    (STORY, 'Story'),
+    (VOLUME, 'Volume'),
+    (ARC, 'Arc'),
 )
 
 
@@ -185,3 +197,51 @@ class SourceImage(models.Model):
 @receiver(post_delete, sender=SourceImage)
 def image_post_delete_handler(sender, **kwargs):
     kwargs['instance'].file.delete(save=False)
+
+
+class Thread(models.Model):
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+    )
+    synopsis = models.TextField(
+        blank=True,
+        null=True,
+    )
+    type = models.CharField(
+        max_length=1,
+        choices=THREAD_TYPE_CHOICES,
+        default=FREEFORM,
+    )
+    issue_based = models.BooleanField(
+        default=False,
+    )
+
+    def __str__(self):
+        trunc = Truncator(self.name)
+        return trunc.words(4)
+
+
+class ThreadSequence(models.Model):
+    thread = models.ForeignKey(
+        'Thread',
+        models.CASCADE,
+    )
+    order = models.PositiveSmallIntegerField(
+        default=0,
+    )
+    installment = models.ForeignKey(
+        'Installment',
+        models.PROTECT,
+    )
+    begin_page = models.PositiveSmallIntegerField(
+        default=0,
+    )
+    end_page = models.PositiveSmallIntegerField(
+        blank=True,
+        null=True,
+    )
+
+    class Meta:
+        ordering = ['order']
+

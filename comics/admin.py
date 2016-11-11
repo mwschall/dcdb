@@ -2,11 +2,14 @@ import re
 
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import TabularInline
 from django.core.exceptions import ValidationError
+from django.db import models
 from django.db import transaction
+from django.forms import Textarea
 
 from people.admin import CreditInline
-from .models import Installment, Series, SourceImage
+from .models import Installment, Series, SourceImage, Thread, ThreadSequence
 
 
 class SeriesAdmin(admin.ModelAdmin):
@@ -85,5 +88,23 @@ class InstallmentAdmin(admin.ModelAdmin):
             obj.save()
 
 
+class ThreadSequenceInline(TabularInline):
+    model = ThreadSequence
+    extra = 1
+
+
+class ThreadAdmin(admin.ModelAdmin):
+    inlines = [ThreadSequenceInline]
+    formfield_overrides = {
+        models.TextField: {
+            'widget': Textarea(
+                attrs={'rows': 3,
+                       'cols': 60}
+            )
+        },
+    }
+
+
 admin.site.register(Installment, InstallmentAdmin)
 admin.site.register(Series, SeriesAdmin)
+admin.site.register(Thread, ThreadAdmin)
