@@ -26,8 +26,8 @@ def get_full_credits(m):
         m = m.installment
     if isinstance(m, Installment):
         credit_set = credit_set | set(m.credits.all())
-        m = m.story
-    if isinstance(m, Story):
+        m = m.series
+    if isinstance(m, Series):
         credit_set = credit_set | set(m.credits.all())
 
     return list(credit_set)
@@ -49,7 +49,7 @@ def gen_src_loc(instance, filename):
         )
 
 
-class Story(models.Model):
+class Series(models.Model):
     name = models.CharField(
         max_length=200,
     )
@@ -62,15 +62,15 @@ class Story(models.Model):
     credits = GenericRelation(Credit)
 
     class Meta:
-        verbose_name_plural = "stories"
+        verbose_name_plural = "series"
 
     def __str__(self):
         return "{} [{}]".format(self.name, self.slug)
 
 
 class Installment(models.Model):
-    story = models.ForeignKey(
-        'Story',
+    series = models.ForeignKey(
+        'Series',
         models.CASCADE
     )
     number = models.CharField(
@@ -93,11 +93,11 @@ class Installment(models.Model):
     credits = GenericRelation(Credit)
 
     class Meta:
-        unique_together = ('story', 'number')
-        ordering = ['story', 'number']
+        unique_together = ('series', 'number')
+        ordering = ['series', 'number']
 
     def __str__(self):
-        return "{} #{}".format(self.story.name, self.number)
+        return "{} #{}".format(self.series.name, self.number)
 
     @property
     def cover(self):
@@ -115,7 +115,7 @@ class Installment(models.Model):
     @property
     def slug(self):
         # TODO: any way to check if number is sequential and zero-pad?
-        return "{}_{}".format(self.story.slug, self.number)
+        return "{}_{}".format(self.series.slug, self.number)
 
 
 class Page(models.Model):

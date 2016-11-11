@@ -6,10 +6,10 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from people.admin import CreditInline
-from .models import Installment, Story, SourceImage
+from .models import Installment, Series, SourceImage
 
 
-class StoryAdmin(admin.ModelAdmin):
+class SeriesAdmin(admin.ModelAdmin):
     inlines = [CreditInline]
 
 
@@ -85,5 +85,5 @@ class InstallmentAdmin(admin.ModelAdmin):
             obj.save()
 
 
-admin.site.register(Story, StoryAdmin)
 admin.site.register(Installment, InstallmentAdmin)
+admin.site.register(Series, SeriesAdmin)
