@@ -9,6 +9,13 @@ from django.dispatch import receiver
 
 from people.models import Credit
 
+LTR = 'LTR'
+RTL = 'RTL'
+FLIP_DIRECTION_CHOICES = (
+    (LTR, 'Left-to-Right'),
+    (RTL, 'Right-to-Left'),
+)
+
 
 # TODO: ra ra efficiency, either prefetch_related or merge in DB
 def get_full_credits(m):
@@ -76,6 +83,11 @@ class Installment(models.Model):
     )
     has_cover = models.BooleanField(
         default=True,
+    )
+    flip_direction = models.CharField(
+        max_length=3,
+        choices=FLIP_DIRECTION_CHOICES,
+        default=LTR,
     )
 
     credits = GenericRelation(Credit)
