@@ -1,7 +1,16 @@
 {% extends 'comics/_standard.html' %}
 
 {% block content %}
-  <div class="flow_grid">
+  <h2>Threads</h2>
+  <div class="flow_row">
+  {% for thread in threads %}
+    <a class="flow_cell issue_cell no_cover" href="{% url 'comics:thread' thread.id %}">
+      <h3 class="title">{{ thread }}</h3>
+    </a>
+  {% endfor %}
+  </div>
+  <h2>Installments</h2>
+  <div class="flow_row">
   {% for installment in installments %}
     {% if installment.has_cover %}
       <a class="flow_cell issue_cell" href="{% url 'comics:installment' installment.id %}">
@@ -9,7 +18,7 @@
       </a>
     {% else %}
       <a class="flow_cell issue_cell no_cover" href="{% url 'comics:installment' installment.id %}">
-        <h3 class="issue_title">{{ installment }}</h3>
+        <h3 class="title">{{ installment }}</h3>
       </a>
     {% endif %}
   {% endfor %}

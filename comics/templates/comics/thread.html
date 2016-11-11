@@ -1,0 +1,13 @@
+{% extends 'comics/_standard.html' %}
+
+{% load comics_extras %}
+
+{% block content %}
+  <div class="flow_grid">
+  {% for page in pages %}
+    <a class="flow_cell page_cell" href="#">
+      <img class="page_image" src="{{ page.image.url }}" />
+    </a>
+  {% endfor %}
+  </div>
+{% endblock %}

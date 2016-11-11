@@ -9,7 +9,7 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 
 from comics.serializers import PageSerializer
-from .models import Installment, Page, get_full_credits
+from .models import Installment, Page, get_full_credits, Thread
 
 p = inflect.engine()
 
@@ -53,8 +53,12 @@ def gen_page_links(page):
 
 @api_view(['GET'])
 def index(request):
+    threads = Thread.objects.all()
     installments = Installment.objects.all()
-    context = {'installments': installments}
+    context = {
+        'threads': threads,
+        'installments': installments,
+    }
     return render(request, 'comics/index.html', context)
 
 
@@ -78,10 +82,17 @@ def installment_page(request, installment_id, page_idx):
 
     context = {
         'page': serializer.data,
-        'links': gen_page_links(page)
+        'links': gen_page_links(page),
     }
 
     return Response(context, template_name='comics/page.html')
 
 
-
+@api_view(['GET'])
+def thread_detail(request, thread_id):
+    thread = get_object_or_404(Thread, pk=thread_id)
+    context = {
+        'thread': thread,
+        'pages': thread.pages,
+    }
+    return render(request, 'comics/thread.html', context)

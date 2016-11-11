@@ -1,9 +1,11 @@
 import os
+from itertools import chain
 
 import shortuuid
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.db.models import Q
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils.text import Truncator
@@ -216,10 +218,25 @@ class Thread(models.Model):
     issue_based = models.BooleanField(
         default=False,
     )
+    installments = models.ManyToManyField(
+        'Installment',
+        through='ThreadSequence',
+    )
 
     def __str__(self):
         trunc = Truncator(self.name)
         return trunc.words(4)
+
+    @property
+    def cover(self):
+        return self.threadsequence_set.first().first_page.image
+
+    @property
+    def pages(self):
+        pages = chain()
+        for ts in self.threadsequence_set.iterator():
+            pages = chain(pages, ts.pages)
+        return list(pages)
 
 
 class ThreadSequence(models.Model):
@@ -244,4 +261,24 @@ class ThreadSequence(models.Model):
 
     class Meta:
         ordering = ['order']
+
+    @property
+    def first_page(self):
+        return Page.objects.get(
+            Q(installment=self.installment),
+            Q(order=self.begin_page),
+        )
+
+    @property
+    def pages(self):
+        if self.end_page:
+            return Page.objects.filter(
+                Q(installment=self.installment),
+                Q(order__range=(self.begin_page, self.end_page)),
+            )
+        else:
+            return Page.objects.filter(
+                Q(installment=self.installment),
+                Q(order__gte=self.begin_page),
+            )
 
