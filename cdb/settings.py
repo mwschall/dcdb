@@ -93,6 +93,33 @@ DATABASES = {
 }
 
 
+# Logging
+# http://stackoverflow.com/questions/4375784/log-all-sql-queries
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_true': {
+            '()': 'django.utils.log.RequireDebugTrue',
+        }
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+        }
+    },
+    # 'loggers': {
+    #     'django.db.backends': {
+    #         'level': 'DEBUG',
+    #         'handlers': ['console'],
+    #     }
+    # },
+}
+
+
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
 

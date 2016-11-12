@@ -14,7 +14,7 @@
   {% for installment in installments %}
     {% if installment.has_cover %}
       <a class="flow_cell issue_cell" href="{% url 'comics:installment' installment.id %}">
-        <img class="issue_cover" src="{{ installment.cover.url }}" />
+        <img class="issue_cover" src="{{ installment.cover.image_url }}" />
       </a>
     {% else %}
       <a class="flow_cell issue_cell no_cover" href="{% url 'comics:installment' installment.id %}">

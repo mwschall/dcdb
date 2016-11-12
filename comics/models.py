@@ -2,10 +2,12 @@ import os
 from itertools import chain
 
 import shortuuid
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
+from django.db.models.expressions import RawSQL
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils.text import Truncator
@@ -72,8 +74,10 @@ class Series(models.Model):
         max_length=20,
         unique=True,
     )
-
-    credits = GenericRelation(Credit)
+    credits = GenericRelation(
+        Credit,
+        related_query_name='series',
+    )
 
     class Meta:
         verbose_name_plural = "series"
@@ -103,8 +107,10 @@ class Installment(models.Model):
         choices=FLIP_DIRECTION_CHOICES,
         default=LTR,
     )
-
-    credits = GenericRelation(Credit)
+    credits = GenericRelation(
+        Credit,
+        related_query_name='installments',
+    )
 
     class Meta:
         unique_together = ('series', 'number')
@@ -115,7 +121,7 @@ class Installment(models.Model):
 
     @property
     def cover(self):
-        return self.page_set.first().image if self.has_cover else None
+        return self.page_set.first() if self.has_cover else None
 
     @property
     def num_pages(self):
@@ -132,7 +138,31 @@ class Installment(models.Model):
         return "{}_{}".format(self.series.slug, self.number)
 
 
+class PageManager(models.Manager):
+    def get_queryset(self):
+        qs = super(PageManager, self).get_queryset()
+
+        # table names are not allowed as params
+        query = 'select file from {} where content_type_id = %s AND object_id = comics_page.id'.format(
+            SourceImage.objects.model._meta.db_table,
+        )
+        # this hits the DB, but the value will be cached
+        page_cti = ContentType.objects.get_for_model(Page).id
+        qs = qs.annotate(
+            file=RawSQL(
+                query,
+                (page_cti,),
+                # TODO: why doesn't this work?
+                output_field=models.ImageField(),
+            )
+        )
+
+        return qs
+
+
 class Page(models.Model):
+    objects = PageManager()
+
     installment = models.ForeignKey(
         'Installment',
         models.CASCADE,
@@ -149,8 +179,10 @@ class Page(models.Model):
         'SourceImage',
         related_query_name='pages',
     )
-
-    credits = GenericRelation(Credit)
+    credits = GenericRelation(
+        Credit,
+        related_query_name='pages',
+    )
 
     class Meta:
         # NOTE: don't add order to uniqueness constraint (See: goo.gl/nnctw0)
@@ -166,8 +198,9 @@ class Page(models.Model):
         return self.number == 0
 
     @property
-    def image(self):
-        return self.images.first()
+    def image_url(self):
+        # TODO: this is a fragile hack
+        return os.path.join(settings.MEDIA_URL, self.file)
 
 
 class SourceImage(models.Model):
@@ -229,7 +262,7 @@ class Thread(models.Model):
 
     @property
     def cover(self):
-        return self.threadsequence_set.first().first_page.image
+        return self.threadsequence_set.first().first_page
 
     @property
     def pages(self):

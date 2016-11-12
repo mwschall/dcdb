@@ -12,7 +12,7 @@
   {% for page in pages %}
     <a class="flow_cell page_cell" href="{% url 'comics:page' installment.id page.order %}">
       <span class="page_number">{{ page|page_num }}</span>
-      <img class="page_image" src="{{ page.image.url }}" />
+      <img class="page_image" src="{{ page.image_url }}" />
     </a>
   {% endfor %}
   </div>
