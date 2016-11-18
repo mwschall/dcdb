@@ -1,0 +1,12 @@
+env:
+  browser: true
+extends: airbnb-base
+plugins:
+  - html
+rules:
+  quotes: [error, single, { allowTemplateLiterals: true }]
+  # Going Vue-style and banishing the semicolon.
+  semi: [error, never]
+  # Function Properties should always have a space in shorthand form. There
+  # doesn't seem to be a separate rule for that though.
+  space-before-function-paren: [error, always]
