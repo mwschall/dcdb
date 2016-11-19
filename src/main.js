@@ -7,7 +7,7 @@ import Viewer from './Viewer.vue'
 Vue.use(VueRouter)
 
 const routes = [
-  { path: '/comics/installment/:installment/page/:page', component: Viewer },
+  { path: '/comics/installment/:installment/page/:page', component: Viewer, name: 'page' },
 ]
 
 const router = new VueRouter({

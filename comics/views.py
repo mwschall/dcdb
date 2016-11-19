@@ -81,6 +81,7 @@ def installment_page(request, installment_id, page_idx):
     serializer = PageSerializer(instance=page)
 
     context = {
+        'total_pages': page.installment.num_pages,
         'page': serializer.data,
         'links': gen_page_links(page),
     }
