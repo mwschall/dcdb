@@ -2,12 +2,10 @@ import os
 from itertools import chain
 
 import shortuuid
-from django.conf import settings
-from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
-from django.db.models.expressions import RawSQL
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils.text import Truncator
@@ -49,13 +47,13 @@ def get_full_credits(m):
     return list(credit_set)
 
 
+# TODO: put this in the subclasses of SourceImage
 def gen_src_loc(instance, filename):
-    owner = instance.owner
     ext = os.path.splitext(filename)[1]
-    if isinstance(owner, Page):
+    if isinstance(instance, Page):
         return "installments/{}/{:04d}{}".format(
-            owner.installment.slug,
-            owner.order,
+            instance.installment.slug,
+            instance.order,
             ext,
         )
     else:
@@ -138,31 +136,44 @@ class Installment(models.Model):
         return "{}_{}".format(self.series.slug, self.number)
 
 
-class PageManager(models.Manager):
-    def get_queryset(self):
-        qs = super(PageManager, self).get_queryset()
+class SourceImage(models.Model):
+    file = models.ImageField(
+        upload_to=gen_src_loc,
+        width_field='file_width',
+        height_field='file_height',
+    )
+    file_width = models.PositiveIntegerField()
+    file_height = models.PositiveIntegerField()
+    # TODO: do we /really/ care about this?
+    # http://stackoverflow.com/questions/4892729/
+    original_name = models.CharField(
+        max_length=260,
+    )
 
-        # table names are not allowed as params
-        query = 'select file from {} where content_type_id = %s AND object_id = comics_page.id'.format(
-            SourceImage.objects.model._meta.db_table,
-        )
-        # this hits the DB, but the value will be cached
-        page_cti = ContentType.objects.get_for_model(Page).id
-        qs = qs.annotate(
-            file=RawSQL(
-                query,
-                (page_cti,),
-                # TODO: why doesn't this work?
-                output_field=models.ImageField(),
-            )
-        )
+    @property
+    def url(self):
+        return self.file.url
 
-        return qs
+    @property
+    def image_url(self):
+        return self.file.url
+
+    @property
+    def image_width(self):
+        return self.file_width
+
+    @property
+    def image_height(self):
+        return self.file_height
 
 
-class Page(models.Model):
-    objects = PageManager()
+# http://stackoverflow.com/questions/5372934/
+@receiver(post_delete, sender=SourceImage)
+def image_post_delete_handler(sender, **kwargs):
+    kwargs['instance'].file.delete(save=False)
 
+
+class Page(SourceImage):
     installment = models.ForeignKey(
         'Installment',
         models.CASCADE,
@@ -174,10 +185,6 @@ class Page(models.Model):
     )
     number = models.PositiveSmallIntegerField(
         help_text="Essentially, the page 'name'.",
-    )
-    images = GenericRelation(
-        'SourceImage',
-        related_query_name='pages',
     )
     credits = GenericRelation(
         Credit,
@@ -196,42 +203,6 @@ class Page(models.Model):
     def is_cover(self):
         # TODO: does this need to be more robust?
         return self.number == 0
-
-    @property
-    def image_url(self):
-        # TODO: this is a fragile hack
-        return os.path.join(settings.MEDIA_URL, self.file)
-
-
-class SourceImage(models.Model):
-    content_type = models.ForeignKey(
-        ContentType,
-        models.CASCADE,
-    )
-    object_id = models.PositiveIntegerField()
-    owner = GenericForeignKey()
-
-    file = models.ImageField(
-        upload_to=gen_src_loc
-    )
-    # TODO: do we /really/ care about this?
-    # http://stackoverflow.com/questions/4892729/
-    original_name = models.CharField(
-        max_length=260
-    )
-
-    class Meta:
-        unique_together = ('content_type', 'object_id')
-
-    @property
-    def url(self):
-        return self.file.url
-
-
-# http://stackoverflow.com/questions/5372934/
-@receiver(post_delete, sender=SourceImage)
-def image_post_delete_handler(sender, **kwargs):
-    kwargs['instance'].file.delete(save=False)
 
 
 class Thread(models.Model):
@@ -314,4 +285,3 @@ class ThreadSequence(models.Model):
                 Q(installment=self.installment),
                 Q(order__gte=self.begin_page),
             )
-

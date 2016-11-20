@@ -9,7 +9,7 @@ from django.db import transaction
 from django.forms import Textarea
 
 from people.admin import CreditInline
-from .models import Installment, Series, SourceImage, Thread, ThreadSequence
+from .models import Installment, Series, Thread, ThreadSequence
 
 
 class SeriesAdmin(admin.ModelAdmin):
@@ -74,16 +74,12 @@ class InstallmentAdmin(admin.ModelAdmin):
             obj.save()
 
             for idx, p in enumerate(pages):
-                page = obj.page_set.create(
+                obj.page_set.create(
                     order=idx,
                     number=p['number'],
-                )
-                image = SourceImage(
-                    owner=page,
                     file=p['file'],
                     original_name=p['file'].name,
                 )
-                image.save()
         else:
             obj.save()
 
