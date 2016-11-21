@@ -15,6 +15,7 @@
 </template>
 
 <script>
+import PageCache from './PageCache'
 import ScrubberBar from './ScrubberBar.vue'
 
 export default {
@@ -23,11 +24,16 @@ export default {
   data () {
     /* eslint no-underscore-dangle: "off" */
     const wis = window.__INITIAL_STATE__
+    const store = PageCache
+
+    store.thread = wis.links.installment_url
+
     return {
       showUI: true,
       totalPages: wis.total_pages,
       page: wis.page,
       links: wis.links,
+      store,
     }
   },
   methods: {
@@ -53,16 +59,21 @@ export default {
         this.showUI = !this.showUI
       }
     },
+    handlePage (num, url) {
+      this.$refs.image.src = url
+    },
   },
   watch: {
-    $route () {
-      this.getPage(this.$route.fullPath)
-        .then(response => response.json())
-        .then((data) => {
-          this.page = data.page
-          this.links = data.links
-        })
+    $route (route) {
+      const num = route.params.page
+      const { url, loaded } = this.store.getPage(num)
+      if (loaded) {
+        this.handlePage(num, url)
+      }
     },
+  },
+  mounted () {
+    this.store.$on('pageloaded', this.handlePage)
   },
 }
 </script>
