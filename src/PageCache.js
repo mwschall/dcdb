@@ -6,6 +6,16 @@ const JSONheaders = new Headers({
 })
 
 const store = new Vue({
+  props: {
+    ensureForward: {
+      type: Number,
+      default: 2,
+    },
+    retainBackward: {
+      type: Number,
+      default: 1,
+    },
+  },
   data: {
     pages: [],
     thread: undefined,
@@ -28,21 +38,44 @@ const store = new Vue({
         throw new Error('We have a problem.')
       }
 
-      if (!page.loaded) {
+      this.loadPage(num)
+      this.$nextTick(() => {
+        for (let n = num - this.retainBackward; n <= num + this.ensureForward; n += 1) {
+          if (n !== num) {
+            this.loadPage(n)
+          }
+        }
+      })
+
+      return { url: page.blob_url, loaded: !!page.loaded }
+    },
+    loadPage (num) {
+      const page = this.pages[num - 1]
+      if (page && !page.loaded) {
+        // TODO: may need to use blob-util.imgSrcToBlob for wider support
         this.getPath(page.image_url)
           .then((response) => {
             if (response.ok) {
-              response.blob().then((imgBlob) => {
-                page.blob = imgBlob
-                page.blob_url = URL.createObjectURL(imgBlob)
-                page.loaded = true
+              response.blob().then((blob) => {
+                this.setBlob(num, blob)
                 this.$emit('pageloaded', num, page.blob_url)
               })
             }
           })
       }
-
-      return { url: page.blob_url, loaded: !!page.loaded }
+    },
+    setBlob (num, blob) {
+      const page = this.pages[num - 1]
+      if (page) {
+        page.blob_url = URL.createObjectURL(blob)
+        page.loaded = true
+      }
+    },
+    killBlob (num) {
+      const page = this.pages[num - 1]
+      if (page && page.loaded) {
+        URL.revokeObjectURL(page.blob_url)
+      }
     },
   },
   watch: {

@@ -26,9 +26,6 @@ export default {
   data () {
     /* eslint no-underscore-dangle: "off" */
     const wis = window.__INITIAL_STATE__
-    const store = PageCache
-
-    store.thread = wis.links.installment_url
 
     return {
       showUI: true,
@@ -36,7 +33,7 @@ export default {
       page: wis.page,
       links: wis.links,
       loading: false,
-      store,
+      installment: wis.links.installment_url,
     }
   },
   computed: {
@@ -66,14 +63,16 @@ export default {
       }
     },
     handlePage (num, url) {
-      this.$refs.image.src = url
-      this.loading = false
+      if (num === this.currPage) {
+        this.$refs.image.src = url
+        this.loading = false
+      }
     },
   },
   watch: {
     $route () {
       const num = this.currPage
-      const { url, loaded } = this.store.getPage(num)
+      const { url, loaded } = PageCache.getPage(num)
       if (loaded) {
         this.handlePage(num, url)
       } else {
@@ -82,7 +81,14 @@ export default {
     },
   },
   mounted () {
-    this.store.$on('pageloaded', this.handlePage)
+    PageCache.$on('pageloaded', this.handlePage)
+    PageCache.$on('ready', () => {
+      // switch to blob URL and prefetch; request should already be cached
+      PageCache.getPage(this.currPage)
+    })
+
+    // this kicks the store into action; must happen after event registration
+    PageCache.thread = this.installment
   },
 }
 </script>
