@@ -22,7 +22,7 @@ const store = new Vue({
       return this.getPath(path, JSONheaders)
     },
     getPage (num) {
-      const page = this.pages[num]
+      const page = this.pages[num - 1]
 
       if (!page) {
         throw new Error('We have a problem.')

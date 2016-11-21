@@ -2,10 +2,10 @@
 <div id="app" class="viewport" @click="handleClick">
   <img :src="page.image_url" class="page_image" ref="image" />
   <spinner :show="loading" />
-  <router-link v-if="links.prev_url" :to="links.prev_url" class="left arrow">
+  <router-link v-if="prevUrl" :to="prevUrl" class="left arrow">
     <span class="icon">◀</span>
   </router-link>
-  <router-link v-if="links.next_url" :to="links.next_url" class="right arrow">
+  <router-link v-if="nextUrl" :to="nextUrl" class="right arrow">
     <span class="icon">▶</span>
   </router-link>
   <a :href="links.installment_url" class="close">
@@ -39,23 +39,26 @@ export default {
       store,
     }
   },
-  methods: {
-    getPage (path) {
-      const headers = new Headers({
-        Accept: 'application/json',
-      })
-
-      return fetch(path, {
-        method: 'GET',
-        redirect: 'follow',
-        headers,
-      })
+  computed: {
+    currPage () {
+      return parseInt(this.$route.params.page, 10) + 1
     },
-    gotoPage (page) {
-      this.$router.push({
+    prevUrl () {
+      return this.getPageRoute(this.currPage - 1)
+    },
+    nextUrl () {
+      return this.getPageRoute(this.currPage + 1)
+    },
+  },
+  methods: {
+    getPageRoute (num) {
+      return num <= 0 || this.totalPages < num ? undefined : {
         name: 'page',
-        params: Object.assign({}, this.$route.params, { page: page - 1 }),
-      })
+        params: Object.assign({}, this.$route.params, { page: num - 1 }),
+      }
+    },
+    gotoPage (num) {
+      this.$router.push(this.getPageRoute(num))
     },
     handleClick (event) {
       if (event.target === this.$el || event.target === this.$refs.image) {
@@ -68,8 +71,8 @@ export default {
     },
   },
   watch: {
-    $route (route) {
-      const num = route.params.page
+    $route () {
+      const num = this.currPage
       const { url, loaded } = this.store.getPage(num)
       if (loaded) {
         this.handlePage(num, url)
