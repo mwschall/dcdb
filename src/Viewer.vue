@@ -1,6 +1,7 @@
 <template>
 <div id="app" class="viewport" @click="handleClick">
   <img :src="page.image_url" class="page_image" ref="image" />
+  <spinner :show="loading" />
   <router-link v-if="links.prev_url" :to="links.prev_url" class="left arrow">
     <span class="icon">◀</span>
   </router-link>
@@ -17,10 +18,11 @@
 <script>
 import PageCache from './PageCache'
 import ScrubberBar from './ScrubberBar.vue'
+import Spinner from './Spinner.vue'
 
 export default {
   name: 'viewer',
-  components: { ScrubberBar },
+  components: { ScrubberBar, Spinner },
   data () {
     /* eslint no-underscore-dangle: "off" */
     const wis = window.__INITIAL_STATE__
@@ -33,6 +35,7 @@ export default {
       totalPages: wis.total_pages,
       page: wis.page,
       links: wis.links,
+      loading: false,
       store,
     }
   },
@@ -61,6 +64,7 @@ export default {
     },
     handlePage (num, url) {
       this.$refs.image.src = url
+      this.loading = false
     },
   },
   watch: {
@@ -69,6 +73,8 @@ export default {
       const { url, loaded } = this.store.getPage(num)
       if (loaded) {
         this.handlePage(num, url)
+      } else {
+        this.loading = true
       }
     },
   },
