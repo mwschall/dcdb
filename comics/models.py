@@ -119,11 +119,11 @@ class Installment(models.Model):
 
     @property
     def cover(self):
-        return self.page_set.first() if self.has_cover else None
+        return self.pages.first() if self.has_cover else None
 
     @property
     def num_pages(self):
-        return self.page_set.count()
+        return self.pages.count()
 
     @property
     def is_paginated(self):
@@ -160,11 +160,11 @@ class SourceImage(models.Model):
 
     @property
     def image_width(self):
-        return self.file_width
+        return self.file.width
 
     @property
     def image_height(self):
-        return self.file_height
+        return self.file.height
 
 
 # http://stackoverflow.com/questions/5372934/
@@ -177,6 +177,7 @@ class Page(SourceImage):
     installment = models.ForeignKey(
         'Installment',
         models.CASCADE,
+        related_name='pages',
     )
     order = models.PositiveSmallIntegerField(
         help_text='The 0-indexed ordering within parent Installment.',

@@ -70,11 +70,11 @@ class InstallmentAdmin(admin.ModelAdmin):
         elif page_files:
             pages = parse_pages(obj, page_files)
 
-            obj.page_set.all().delete()
+            obj.pages.all().delete()
             obj.save()
 
             for idx, p in enumerate(pages):
-                obj.page_set.create(
+                obj.pages.create(
                     order=idx,
                     number=p['number'],
                     file=p['file'],

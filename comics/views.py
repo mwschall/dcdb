@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 
-from comics.serializers import PageSerializer
+from comics.serializers import PageSerializer, InstallmentSerializer
 from .models import Installment, Page, get_full_credits, Thread
 
 p = inflect.engine()
@@ -63,14 +63,21 @@ def index(request):
 
 
 @api_view(['GET'])
+@renderer_classes([TemplateHTMLRenderer, JSONRenderer])
 def installment_detail(request, installment_id):
     installment = get_object_or_404(Installment, pk=installment_id)
-    context = {
-        'installment': installment,
-        'credits': gen_credit_list(installment),
-        'pages': installment.page_set.all,
-    }
-    return render(request, 'comics/installment.html', context)
+
+    if request.accepted_renderer.format == 'json':
+        serializer = InstallmentSerializer(instance=installment)
+        data = serializer.data
+        return Response(data)
+    else:
+        context = {
+            'installment': installment,
+            'credits': gen_credit_list(installment),
+            'pages': installment.pages.all,
+        }
+        return Response(context, template_name='comics/installment.html')
 
 
 @api_view(['GET'])
