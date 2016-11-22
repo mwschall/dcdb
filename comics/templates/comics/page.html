@@ -12,7 +12,12 @@
 
 {% block skeletonprecontent %}
 <script>
-  window.__INITIAL_STATE__ = {"page":{{ page|json }},"links":{{ links|json }},"total_pages":{{ total_pages }}};
+  window.__INITIAL_STATE__ = {
+    "base":{{ links.installment_url|json }},
+    "page":{{ page|json }},
+    "links":{{ links|json }},
+    "total_pages":{{ total_pages|json }}
+  };
 </script>
 {% endblock %}
 

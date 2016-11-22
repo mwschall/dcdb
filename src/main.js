@@ -11,16 +11,23 @@ VueTouch.config.pan = {
 Vue.use(VueRouter)
 Vue.use(VueTouch)
 
+/* eslint no-underscore-dangle: "off" */
+const INITIAL_STATE = window.window.__INITIAL_STATE__ || {}
+
 const routes = [
-  { path: '/comics/installment/:installment/page/:page', component: Viewer, name: 'page' },
+  { path: '/page/:page', component: Viewer, name: 'page' },
 ]
 
 const router = new VueRouter({
   routes,
   mode: 'history',
+  base: INITIAL_STATE.base,
 })
 
 const app = new Vue({
   router,
   template: `<router-view></router-view>`,
+  data: {
+    INITIAL_STATE,
+  },
 }).$mount('#app')

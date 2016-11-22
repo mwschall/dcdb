@@ -35,16 +35,14 @@ export default {
   name: 'viewer',
   components: { ScrubberBar, Spinner },
   data () {
-    /* eslint no-underscore-dangle: "off" */
-    const wis = window.__INITIAL_STATE__
-
+    const ris = this.$root.INITIAL_STATE
     return {
       showUI: true,
-      totalPages: wis.total_pages,
-      page: wis.page,
-      links: wis.links,
+      totalPages: ris.total_pages,
+      page: ris.page,
+      links: ris.links,
       loading: false,
-      installment: wis.links.installment_url,
+      installment: ris.links.installment_url,
     }
   },
   computed: {
@@ -88,6 +86,11 @@ export default {
         this.loading = false
       }
     },
+    handleClose (event) {
+      if (event.keyCode === 27) {
+        window.location.href = this.installment
+      }
+    },
   },
   watch: {
     $route () {
@@ -101,6 +104,8 @@ export default {
     },
   },
   mounted () {
+    window.addEventListener('keyup', this.handleClose)
+
     PageCache.$on('pageloaded', this.handlePage)
     PageCache.$on('ready', () => {
       // switch to blob URL and prefetch; request should already be cached
@@ -109,6 +114,9 @@ export default {
 
     // this kicks the store into action; must happen after event registration
     PageCache.thread = this.installment
+  },
+  beforeDestroy () {
+    window.removeEventListener('keyup', this.handleClose)
   },
 }
 </script>
