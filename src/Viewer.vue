@@ -11,7 +11,12 @@
   <a :href="links.installment_url" class="close">
     <span class="icon">✘</span>
   </a>
-  <scrubber-bar v-show="showUI" :numPages="totalPages" @nav="gotoPage" />
+  <scrubber-bar
+    v-show="showUI"
+    :currPage="currPage"
+    :numPages="totalPages"
+    @nav="gotoPage"
+    />
 </div>
 </template>
 

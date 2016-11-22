@@ -7,11 +7,8 @@
   @mouseout="hoverPage = undefined"
   >
   <div class="dot" v-for="n in numDots" :key="n">•</div>
-  <div
-    class="tooltip"
-    v-show="hoverPage"
-    :style="tooltipStyle"
-    >
+  <div class="cursor" :style="cursorStyle">•</div>
+  <div class="tooltip" :style="tooltipStyle" v-show="hoverPage">
     <div class="content">{{ hoverPage }}</div>
   </div>
 </div>
@@ -21,6 +18,10 @@
 export default {
   name: 'scrubber-bar',
   props: {
+    currPage: {
+      type: Number,
+      required: true,
+    },
     numPages: {
       type: Number,
       required: true,
@@ -44,16 +45,21 @@ export default {
     numDots () {
       return Math.min(this.numPages, Math.floor(this.elWidth / this.dotWidth))
     },
-    hoverFraction () {
-      return ((2 * (this.hoverPage - 1)) + 1) / (2 * this.numPages)
+    cursorStyle () {
+      return {
+        left: this.getPos(this.currPage, this.numPages),
+      }
     },
     tooltipStyle () {
       return {
-        left: `${100 * this.hoverFraction}%`,
+        left: this.getPos(this.hoverPage, this.numPages),
       }
     },
   },
   methods: {
+    getPos (num, total) {
+      return `${100 * (((2 * (num - 1)) + 1) / (2 * total))}%`
+    },
     computeWidths () {
       const wcs = window.getComputedStyle(this.$el)
       this.elWidth = parseInt(wcs.width, 10)
@@ -79,6 +85,14 @@ export default {
 </script>
 
 <style lang="stylus">
+$scrubberSize = 2rem
+$dotSize = 1rem
+$dotPositioning = 0.25 * $scrubberSize
+$cursorSize = 1rem
+
+$altColor = #ddd
+$contrastColor = rgba(25, 25, 25, 0.75)
+
 .scrubber
   background-color rgba(25, 25, 25, 0.4)
   border-radius .25rem .25rem 0 0
@@ -91,30 +105,50 @@ export default {
   bottom 0
   right 2rem
   left 2rem
-  height 2rem
+  height $scrubberSize
 
   .dot
+  .cursor
     box-sizing border-box
     text-align center
+
+  .dot
+    line-height $dotSize
     width 100%
-    padding-top 0.3rem
-    text-shadow -1px 0 #ddd, 0 1px #ddd, 1px 0 #ddd, 0 -1px #ddd
+    padding-top $dotPositioning
+    text-shadow -1px 0 $altColor, 0 1px $altColor, 1px 0 $altColor, 0 -1px $altColor
+
+  .cursor
+    color $altColor
+    background-color $contrastColor
+    border-radius 0.1875rem
+    box-shadow 0 0 0 0.0625rem $altColor
+    width $cursorSize
+    height $cursorSize
+    margin-left -0.5 * @width
+    margin-top -0.5 * @height
+    line-height @height
+    position absolute
+    top $dotPositioning + (0.5 * $dotSize)
 
   .tooltip
     position absolute
     top 0
-    margin-top -1.6rem
+    margin-top -1.8rem
 
     .content
-      background-color green
+      color $altColor
+      background-color $contrastColor
+      border-radius 0.125rem
       position relative
       width 2rem
       margin-left -1rem
       margin-bottom .5rem
+      padding 0.1rem 0 0.1rem
       text-align center
 
       &:before
-        content ""
+        content ''
         display block
         position absolute
         width 0
@@ -127,5 +161,5 @@ export default {
         top 100%
         left 50%
         margin-left -.5rem
-        border-top-color green
+        border-top-color $contrastColor
 </style>
