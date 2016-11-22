@@ -1,3 +1,4 @@
+var os = require('os')
 var path = require('path')
 var webpack = require('webpack')
 var BundleTracker = require('webpack-bundle-tracker')
@@ -7,7 +8,7 @@ module.exports = {
   entry: './src/main.js',
   output: {
     path: path.resolve('./assets/'),
-    publicPath: 'http://localhost:8080/static/', // used by render_bundle in Django
+    publicPath: 'http://'+os.hostname()+':8080/static/', // used by render_bundle in Django
     filename: 'build.js'
   },
   module: {

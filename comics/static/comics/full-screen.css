@@ -55,6 +55,12 @@ a {
   top: 50%;
   margin-top: -1.5rem;
 }
+.arrow.disabled {
+  cursor: default;
+}
+.arrow.disabled .icon {
+  visibility: hidden;
+}
 .left.arrow .icon {
   left: 5%;
 }

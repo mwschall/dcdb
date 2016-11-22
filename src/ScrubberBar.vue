@@ -1,10 +1,14 @@
 <template>
 <div
   class="scrubber"
-  @click.stop="handleNav"
+  v-touch:tap="handleNav"
+  v-touch:pan="handleHover"
+  v-touch:panend="handleNav"
+  v-touch:press="handleHover"
+  @mousedown="handleHover"
   @mouseover="handleHover"
   @mousemove="handleHover"
-  @mouseout="hoverPage = undefined"
+  @mouseout="handleHover"
   >
   <div class="dot" v-for="n in numDots" :key="n">•</div>
   <div class="cursor" :style="cursorStyle">•</div>
@@ -15,6 +19,8 @@
 </template>
 
 <script>
+import _ from 'lodash'
+
 export default {
   name: 'scrubber-bar',
   props: {
@@ -36,6 +42,7 @@ export default {
   },
   data () {
     return {
+      cursorPage: this.currPage,
       hoverPage: undefined,
       elWidth: 1,
       dotWidth: 1,
@@ -47,7 +54,7 @@ export default {
     },
     cursorStyle () {
       return {
-        left: this.getPos(this.currPage, this.numPages),
+        left: this.getPos(this.cursorPage, this.numPages),
       }
     },
     tooltipStyle () {
@@ -60,18 +67,49 @@ export default {
     getPos (num, total) {
       return `${100 * (((2 * (num - 1)) + 1) / (2 * total))}%`
     },
+    getPage (event) {
+      const pageX = event.center ? event.center.x : event.pageX
+      const bcr = this.$el.getBoundingClientRect()
+      const hoverX = pageX - window.scrollX - bcr.left
+      const page = Math.ceil(this.numPages * (hoverX / bcr.width))
+      return _.clamp(page, 1, this.numPages)
+    },
     computeWidths () {
       const wcs = window.getComputedStyle(this.$el)
       this.elWidth = parseInt(wcs.width, 10)
       this.dotWidth = parseInt(wcs.fontSize, 10) * this.dotSpacingFactor
     },
     handleHover (event) {
-      const bcr = this.$el.getBoundingClientRect()
-      const hoverX = event.pageX - window.scrollX - bcr.left
-      this.hoverPage = Math.ceil(this.numPages * (hoverX / bcr.width)) || 1
+      const etype = event.type
+      if (etype === 'mouseout') {
+        this.hoverPage = undefined
+      } else {
+        this.hoverPage = this.getPage(event)
+
+        // cursor should track the user's mouse/finger when dragging
+        if (etype === 'press' || etype === 'pan') {
+          this.cursorPage = this.hoverPage
+        }
+      }
     },
-    handleNav () {
-      this.$emit('nav', this.hoverPage)
+    handleNav (event) {
+      // kill ephemeral mouse events post-'tap'
+      event.preventDefault()
+
+      const page = this.getPage(event)
+      if (page) {
+        this.$emit('nav', page)
+      }
+
+      const etype = event.type
+      if (etype === 'tap' || etype === 'panend') {
+        this.hoverPage = undefined
+      }
+    },
+  },
+  watch: {
+    currPage (newPage) {
+      this.cursorPage = newPage
     },
   },
   mounted () {

@@ -1,12 +1,18 @@
 <template>
-<div id="app" class="viewport" @click="handleClick">
+<div
+  id="app"
+  class="viewport"
+  v-touch:tap="handleTap"
+  v-touch:swipeleft="handleSwipeLeft"
+  v-touch:swiperight="handleSwipeRight"
+  >
   <img :src="page.image_url" class="page_image" ref="image" />
   <spinner :show="loading" />
-  <router-link v-if="prevUrl" :to="prevUrl" class="left arrow">
-    <span class="icon">◀</span>
-  </router-link>
-  <router-link v-if="nextUrl" :to="nextUrl" class="right arrow">
+  <router-link :to="nextUrl" class="right arrow" :class="{ disabled: !nextUrl }">
     <span class="icon">▶</span>
+  </router-link>
+  <router-link :to="prevUrl" class="left arrow" :class="{ disabled: !prevUrl }">
+    <span class="icon">◀</span>
   </router-link>
   <a :href="links.installment_url" class="close">
     <span class="icon">✘</span>
@@ -45,27 +51,36 @@ export default {
     currPage () {
       return parseInt(this.$route.params.page, 10) + 1
     },
-    prevUrl () {
-      return this.getPageRoute(this.currPage - 1)
-    },
     nextUrl () {
       return this.getPageRoute(this.currPage + 1)
+    },
+    prevUrl () {
+      return this.getPageRoute(this.currPage - 1)
     },
   },
   methods: {
     getPageRoute (num) {
-      return num <= 0 || this.totalPages < num ? undefined : {
+      return num <= 0 || this.totalPages < num ? '' : {
         name: 'page',
         params: Object.assign({}, this.$route.params, { page: num - 1 }),
       }
     },
     gotoPage (num) {
-      this.$router.push(this.getPageRoute(num))
+      const route = this.getPageRoute(num)
+      if (route) {
+        this.$router.push(route)
+      }
     },
-    handleClick (event) {
+    handleTap (event) {
       if (event.target === this.$el || event.target === this.$refs.image) {
         this.showUI = !this.showUI
       }
+    },
+    handleSwipeLeft () {
+      this.gotoPage(this.currPage + 1)
+    },
+    handleSwipeRight () {
+      this.gotoPage(this.currPage - 1)
     },
     handlePage (num, url) {
       if (num === this.currPage) {

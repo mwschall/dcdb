@@ -17,16 +17,20 @@
 {% block skeletoncontent %}
 <div id="app" class="viewport">
   <img class="page_image" src="{{ page.image_url }}" />
-  {% if links.prev_url != None %}
-    <a class="left arrow" href="{{ links.prev_url }}">
-      <span class="icon">◀</span>
-    </a>
+  {% if links.next_url %}
+  <a class="right arrow" href="{{ links.next_url }}">
+  {% else %}
+  <a class="right arrow disabled">
   {% endif %}
-  {% if links.next_url != None %}
-    <a class="right arrow" href="{{ links.next_url }}">
-      <span class="icon">▶</span>
-    </a>
+    <span class="icon">▶</span>
+  </a>
+  {% if links.prev_url %}
+  <a class="left arrow" href="{{ links.prev_url }}">
+  {% else %}
+  <a class="left arrow disabled">
   {% endif %}
+    <span class="icon">◀</span>
+  </a>
   <a class="close" href="{{ links.installment_url }}">
     <span class="icon">✘</span>
   </a>
