@@ -1,9 +1,7 @@
+import axios from 'axios'
+
 import Vue from 'vue'
 
-
-const JSONheaders = new Headers({
-  Accept: 'application/json',
-})
 
 const store = new Vue({
   props: {
@@ -21,15 +19,19 @@ const store = new Vue({
     thread: undefined,
   },
   methods: {
-    getPath (path, headers) {
-      return fetch(path, {
+    getBlob (path) {
+      return axios(path, {
         method: 'GET',
-        redirect: 'follow',
-        headers,
+        responseType: 'blob',
       })
     },
     getJson (path) {
-      return this.getPath(path, JSONheaders)
+      return axios(path, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      })
     },
     getPage (num) {
       const page = this.pages[num - 1]
@@ -53,14 +55,11 @@ const store = new Vue({
       const page = this.pages[num - 1]
       if (page && !page.loaded) {
         // TODO: may need to use blob-util.imgSrcToBlob for wider support
-        this.getPath(page.image_url)
-          .then((response) => {
-            if (response.ok) {
-              response.blob().then((blob) => {
-                this.setBlob(num, blob)
-                this.$emit('pageloaded', num, page.blob_url)
-              })
-            }
+        this.getBlob(page.image_url)
+          .then(response => response.data)
+          .then((blob) => {
+            this.setBlob(num, blob)
+            this.$emit('pageloaded', num, page.blob_url)
           })
       }
     },
@@ -81,9 +80,9 @@ const store = new Vue({
   watch: {
     thread (url) {
       this.getJson(url)
-        .then(response => response.json())
-        .then((data) => {
-          this.pages = data.pages
+        .then(response => response.data)
+        .then((json) => {
+          this.pages = json.pages
           this.$emit('ready')
         })
     },
