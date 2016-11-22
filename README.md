@@ -1,4 +1,4 @@
-# cdb
+# dcdb
 
 > Digital Comic DB
 

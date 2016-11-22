@@ -61,7 +61,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'cdb.urls'
+ROOT_URLCONF = 'dcdb.urls'
 
 TEMPLATES = [
     {
@@ -79,7 +79,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'cdb.wsgi.application'
+WSGI_APPLICATION = 'dcdb.wsgi.application'
 
 
 # Database
