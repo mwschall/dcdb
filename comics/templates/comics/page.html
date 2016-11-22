@@ -5,6 +5,9 @@
 {% load render_bundle from webpack_loader %}
 
 {% block skeletoncss %}
+  {% if not debug %}
+    {% render_bundle 'app' 'css' %}
+  {% endif %}
 {% endblock %}
 
 {% block skeletonprecontent %}
@@ -37,5 +40,6 @@
 {% endblock %}
 
 {% block skeletonpostcontent %}
-  {% render_bundle 'main' 'js' %}
+  {% render_bundle 'vendor' 'js' %}
+  {% render_bundle 'app' 'js' %}
 {% endblock %}
