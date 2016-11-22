@@ -26,3 +26,9 @@ For detailed explanation on how things work, consult the [docs for vue-loader](h
 
 * [ComicFlow](https://github.com/swisspol/ComicFlow) for the Viewer design;
 * [Luke Haas' CSS Loaders](https://projects.lukehaas.me/css-loaders/) for the bouncy bars.
+
+## License
+
+[MIT](http://opensource.org/licenses/MIT)
+
+Copyright (c) 2016 Matthew Schallberger
