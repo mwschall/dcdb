@@ -1,12 +1,12 @@
 <template>
 <div
   id="app"
-  class="viewport"
+  class="viewer"
   v-touch:tap="handleTap"
   v-touch:swipeleft="handleSwipeLeft"
   v-touch:swiperight="handleSwipeRight"
   >
-  <img :src="page.image_url" class="page_image" ref="image" />
+  <viewport :src="image" ref="viewport" />
   <spinner :show="loading" />
   <router-link :to="nextUrl" class="right arrow" :class="{ disabled: !nextUrl }">
     <span class="icon">▶</span>
@@ -30,16 +30,18 @@
 import PageCache from './PageCache'
 import ScrubberBar from './ScrubberBar.vue'
 import Spinner from './Spinner.vue'
+import Viewport from './Viewport.vue'
 
 export default {
   name: 'viewer',
-  components: { ScrubberBar, Spinner },
+  components: { ScrubberBar, Spinner, Viewport },
   data () {
     const ris = this.$root.INITIAL_STATE
     return {
       showUI: true,
       totalPages: ris.total_pages,
       page: ris.page,
+      image: ris.page.image_url,
       links: ris.links,
       loading: false,
       installment: ris.links.installment_url,
@@ -70,7 +72,7 @@ export default {
       }
     },
     handleTap (event) {
-      if (event.target === this.$el || event.target === this.$refs.image) {
+      if (event.target === this.$el || event.target === this.$refs.viewport) {
         this.showUI = !this.showUI
       }
     },
@@ -82,7 +84,7 @@ export default {
     },
     handlePage (num, url) {
       if (num === this.currPage) {
-        this.$refs.image.src = url
+        this.image = url
         this.loading = false
       }
     },
@@ -124,15 +126,12 @@ export default {
 <style lang="stylus">
 html
 body
-.viewport
+.viewer
   width 100%
   height 100%
   margin 0
 
-.viewport
-  background #000
-  user-select none
-
+.viewer
   a
     text-decoration none
 
@@ -144,18 +143,12 @@ body
     :hover > ^[1..-1]
       opacity .5
 
-  img
   .arrow
     position absolute
     top 0
     left 0
     right 0
     bottom 0
-
-  img
-    margin auto
-    max-height 100%
-    max-width 100%
 
 .arrow
   width 20%

@@ -4,8 +4,10 @@ import VueTouch from 'vue-touch'
 
 import Viewer from './Viewer.vue'
 
-VueTouch.config.pan = {
-  threshold: 0,
+VueTouch.config = {
+  pan: {
+    threshold: 0,
+  },
 }
 
 Vue.use(VueRouter)

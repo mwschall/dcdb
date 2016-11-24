@@ -22,8 +22,10 @@
 {% endblock %}
 
 {% block skeletoncontent %}
-<div id="app" class="viewport">
-  <img class="page_image" src="{{ page.image_url }}" />
+<div id="app" class="viewer">
+  <div class="viewport">
+    <img class="fit" src="{{ page.image_url }}" />
+  </div>
   {% if links.next_url %}
   <a class="right arrow" href="{{ links.next_url }}">
   {% else %}
