@@ -1,61 +1,65 @@
-<template>
-<div
-  id="app"
-  class="viewer"
-  v-touch:tap="handleTap"
-  v-touch:swipeleft="handleSwipeLeft"
-  v-touch:swiperight="handleSwipeRight"
-  >
-  <viewport :src="image" ref="viewport" />
-  <spinner :show="loading" />
-  <router-link :to="nextUrl" class="right arrow" :class="{ disabled: !nextUrl }">
-    <span class="icon">▶</span>
-  </router-link>
-  <router-link :to="prevUrl" class="left arrow" :class="{ disabled: !prevUrl }">
-    <span class="icon">◀</span>
-  </router-link>
-  <a :href="links.installment_url" class="close">
-    <span class="icon">✘</span>
-  </a>
-  <scrubber-bar
-    v-show="showUI"
-    :currPage="currPage"
-    :numPages="totalPages"
-    @nav="gotoPage"
-    />
-</div>
+<template lang="pug">
+div.viewer#app
+  viewport(
+    ref='viewport',
+    :items='items',
+    :loaded='dataLoaded',
+    :currPage='currPage',
+    @nav='gotoPage',
+    )
+    scrubber-bar(
+      slot='additional-ui',
+      :currPage='currPage',
+      :totalPages='totalPages',
+      @nav='gotoPage',
+      )
 </template>
 
 <script>
-import PageCache from './PageCache'
+import axios from 'axios'
+
 import ScrubberBar from './ScrubberBar.vue'
-import Spinner from './Spinner.vue'
-import Viewport from './Viewport.vue'
+import Viewport from './PhotoSwipe.vue'
 
 export default {
   name: 'viewer',
-  components: { ScrubberBar, Spinner, Viewport },
+  components: { ScrubberBar, Viewport },
   data () {
     const ris = this.$root.INITIAL_STATE
+
+    const items = new Array(ris.total_pages)
+
+    items[ris.page.order] = {
+      src: ris.page.image_url,
+      w: ris.page.image_width,
+      h: ris.page.image_height,
+    }
+
+    axios(ris.links.installment_url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    }).then((response) => {
+      response.data.pages.forEach((p, i) => {
+        items[i] = {
+          src: p.image_url,
+          w: p.image_width,
+          h: p.image_height,
+        }
+      })
+      this.dataLoaded = true
+    })
+
     return {
-      showUI: true,
+      items,
       totalPages: ris.total_pages,
-      page: ris.page,
-      image: ris.page.image_url,
-      links: ris.links,
-      loading: false,
-      installment: ris.links.installment_url,
+      dataLoaded: false,
     }
   },
   computed: {
     currPage () {
       return parseInt(this.$route.params.page, 10) + 1
-    },
-    nextUrl () {
-      return this.getPageRoute(this.currPage + 1)
-    },
-    prevUrl () {
-      return this.getPageRoute(this.currPage - 1)
     },
   },
   methods: {
@@ -71,54 +75,6 @@ export default {
         this.$router.push(route)
       }
     },
-    handleTap (event) {
-      if (event.target === this.$el || event.target === this.$refs.viewport) {
-        this.showUI = !this.showUI
-      }
-    },
-    handleSwipeLeft () {
-      this.gotoPage(this.currPage + 1)
-    },
-    handleSwipeRight () {
-      this.gotoPage(this.currPage - 1)
-    },
-    handlePage (num, url) {
-      if (num === this.currPage) {
-        this.image = url
-        this.loading = false
-      }
-    },
-    handleClose (event) {
-      if (event.keyCode === 27) {
-        window.location.href = this.installment
-      }
-    },
-  },
-  watch: {
-    $route () {
-      const num = this.currPage
-      const { url, loaded } = PageCache.getPage(num)
-      if (loaded) {
-        this.handlePage(num, url)
-      } else {
-        this.loading = true
-      }
-    },
-  },
-  mounted () {
-    window.addEventListener('keyup', this.handleClose)
-
-    PageCache.$on('pageloaded', this.handlePage)
-    PageCache.$on('ready', () => {
-      // switch to blob URL and prefetch; request should already be cached
-      PageCache.getPage(this.currPage)
-    })
-
-    // this kicks the store into action; must happen after event registration
-    PageCache.thread = this.installment
-  },
-  beforeDestroy () {
-    window.removeEventListener('keyup', this.handleClose)
   },
 }
 </script>

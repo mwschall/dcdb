@@ -22,6 +22,7 @@ For detailed explanation on how things work, consult the [docs for vue-loader](h
 * [Django](https://www.djangoproject.com/) - Server & ORM
 * [Vue.js](https://vuejs.org/) - Reactive JavaScript
 * [Hammer.js](http://hammerjs.github.io/) - You can, in fact, touch this.
+* [PhotoSwipe](http://photoswipe.com/) - Modular, Touch-enabled Gallery
 
 ## Thanks
 

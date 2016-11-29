@@ -7,7 +7,7 @@ from comics.models import Page, Installment
 class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
-        fields = ('image_url', 'image_width', 'image_height')
+        fields = ('order', 'image_url', 'image_width', 'image_height')
 
 
 class InstallmentSerializer(serializers.ModelSerializer):

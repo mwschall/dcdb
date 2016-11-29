@@ -28,7 +28,7 @@ export default {
       type: Number,
       required: true,
     },
-    numPages: {
+    totalPages: {
       type: Number,
       required: true,
       validator (value) {
@@ -50,16 +50,16 @@ export default {
   },
   computed: {
     numDots () {
-      return Math.min(this.numPages, Math.floor(this.elWidth / this.dotWidth))
+      return Math.min(this.totalPages, Math.floor(this.elWidth / this.dotWidth))
     },
     cursorStyle () {
       return {
-        left: this.getPos(this.cursorPage, this.numPages),
+        left: this.getPos(this.cursorPage, this.totalPages),
       }
     },
     tooltipStyle () {
       return {
-        left: this.getPos(this.hoverPage, this.numPages),
+        left: this.getPos(this.hoverPage, this.totalPages),
       }
     },
   },
@@ -71,8 +71,8 @@ export default {
       const pageX = event.center ? event.center.x : event.pageX
       const bcr = this.$el.getBoundingClientRect()
       const hoverX = pageX - window.scrollX - bcr.left
-      const page = Math.ceil(this.numPages * (hoverX / bcr.width))
-      return _.clamp(page, 1, this.numPages)
+      const page = Math.ceil(this.totalPages * (hoverX / bcr.width))
+      return _.clamp(page, 1, this.totalPages)
     },
     computeWidths () {
       const wcs = window.getComputedStyle(this.$el)
@@ -80,6 +80,8 @@ export default {
       this.dotWidth = parseInt(wcs.fontSize, 10) * this.dotSpacingFactor
     },
     handleHover (event) {
+      (event.srcEvent || event).stopPropagation()
+
       const etype = event.type
       if (etype === 'mouseout') {
         this.hoverPage = undefined
@@ -93,6 +95,7 @@ export default {
       }
     },
     handleNav (event) {
+      (event.srcEvent || event).stopPropagation()
       // kill ephemeral mouse events post-'tap'
       event.preventDefault()
 
@@ -113,7 +116,7 @@ export default {
     },
   },
   mounted () {
-    this.computeWidths()
+    this.$nextTick(this.computeWidths)
     window.addEventListener('resize', this.computeWidths)
   },
   beforeDestroy () {
