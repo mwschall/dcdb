@@ -6,6 +6,7 @@ div.viewer#app
     :loaded='dataLoaded',
     :currPage='currPage',
     @nav='gotoPage',
+    @close='gotoThread',
     )
     scrubber-bar(
       slot='additional-ui',
@@ -53,6 +54,7 @@ export default {
 
     return {
       items,
+      thread: ris.links.installment_url,
       totalPages: ris.total_pages,
       dataLoaded: false,
     }
@@ -74,6 +76,9 @@ export default {
       if (route) {
         this.$router.push(route)
       }
+    },
+    gotoThread () {
+      window.location = this.thread
     },
   },
 }

@@ -73,6 +73,10 @@ export default {
         this.$emit('nav', num)
       })
 
+      this.gallery.listen('close', () => {
+        this.$emit('close')
+      })
+
       this.gallery.init()
     },
   },
