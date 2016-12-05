@@ -141,12 +141,13 @@ $scrubberSize = 2rem
 $dotSize = 1rem
 $dotPositioning = 0.25 * $scrubberSize
 $cursorSize = 1rem
+$tooltipSize = 1.25rem
+$arrowSize = 9/16rem
 
 $altColor = #ddd
 $contrastColor = rgba(25, 25, 25, 0.85)
 
 .scrubber
-  background-color rgba(25, 25, 25, 0.4)
   border-radius .25rem .25rem 0 0
   cursor pointer
 
@@ -161,6 +162,7 @@ $contrastColor = rgba(25, 25, 25, 0.85)
 
   .dot
   .cursor
+  .tooltip
     box-sizing border-box
     text-align center
 
@@ -171,41 +173,41 @@ $contrastColor = rgba(25, 25, 25, 0.85)
     text-shadow -1px 0 $altColor, 0 1px $altColor, 1px 0 $altColor, 0 -1px $altColor
 
   .cursor
+  .tooltip
     display flex
     justify-content center
     width 6 * $cursorSize
-    height $cursorSize
     margin-left -0.5 * @width
-    margin-top -0.5 * @height
-    line-height @height
     position absolute
-    top $dotPositioning + (0.5 * $dotSize)
 
     .content
       flex min-content
-      min-width $cursorSize
       color $altColor
       background-color $contrastColor
+
+  .cursor
+    height $cursorSize
+    margin-top -0.5 * @height
+    line-height @height
+    top $dotPositioning + (0.5 * $dotSize)
+
+    .content
+      min-width $cursorSize
       border-radius 0.1875rem
       box-shadow 0 0 0 0.0625rem $altColor
       padding 0 .1875rem
 
 
   .tooltip
-    position absolute
+    margin-top -($tooltipSize + $arrowSize)
+    font-size $tooltipSize
     top 0
-    margin-top -1.8rem
 
     .content
-      color $altColor
-      background-color $contrastColor
+      min-width 1.5 * $tooltipSize
       border-radius 0.125rem
       position relative
-      width 2rem
-      margin-left -1rem
-      margin-bottom .5rem
-      padding 0.1rem 0 0.1rem
-      text-align center
+      margin-bottom $arrowSize
 
       &:before
         content ''
@@ -214,12 +216,12 @@ $contrastColor = rgba(25, 25, 25, 0.85)
         width 0
         height 0
         border-color transparent
-        border-width .5rem .5rem 0
+        border-width $arrowSize $arrowSize 0
         border-style solid
 
       &:before
         top 100%
         left 50%
-        margin-left -.5rem
+        margin-left -($arrowSize)
         border-top-color $contrastColor
 </style>
