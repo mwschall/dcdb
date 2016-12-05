@@ -1,29 +1,36 @@
-<template>
-<div
-  class="scrubber"
-  v-touch:tap="handleNav"
-  v-touch:pan="handleHover"
-  v-touch:panend="handleNav"
-  v-touch:press="handleHover"
-  @mousedown="handleHover"
-  @mouseover="handleHover"
-  @mousemove="handleHover"
-  @mouseout="handleHover"
-  >
-  <div class="dot" v-for="n in numDots" :key="n">•</div>
-  <div class="cursor" :style="cursorStyle">•</div>
-  <div class="tooltip" :style="tooltipStyle" v-show="hoverPage">
-    <div class="content">{{ hoverPage }}</div>
-  </div>
-</div>
+<template lang="pug">
+div.scrubber(
+  v-touch:tap="handleNav",
+  v-touch:pan="handleHover",
+  v-touch:panend="handleNav",
+  v-touch:press="handleHover",
+  @mousedown="handleHover",
+  @mouseover="handleHover",
+  @mousemove="handleHover",
+  @mouseout="handleHover",
+  )
+  div.dot(v-for="n in numDots", :key="n") {{ dotContent }}
+  div.cursor(:style="cursorStyle")
+    div.content {{ cursorContent }}
+  div.tooltip(:style="tooltipStyle", v-show="hoverPage")
+    div.content {{ hoverPage }}
 </template>
 
 <script>
 import _ from 'lodash'
 
+const DOT = '•'
+
 export default {
   name: 'scrubber-bar',
   props: {
+    cursor: {
+      type: String,
+      default: 'num',
+      validator (value) {
+        return _.includes(['num', 'dot'], value)
+      },
+    },
     currPage: {
       type: Number,
       required: true,
@@ -46,11 +53,15 @@ export default {
       hoverPage: undefined,
       elWidth: 1,
       dotWidth: 1,
+      dotContent: DOT,
     }
   },
   computed: {
     numDots () {
       return Math.min(this.totalPages, Math.floor(this.elWidth / this.dotWidth))
+    },
+    cursorContent () {
+      return this.cursor === 'num' ? this.cursorPage : this.dotContent
     },
     cursorStyle () {
       return {
@@ -132,7 +143,7 @@ $dotPositioning = 0.25 * $scrubberSize
 $cursorSize = 1rem
 
 $altColor = #ddd
-$contrastColor = rgba(25, 25, 25, 0.75)
+$contrastColor = rgba(25, 25, 25, 0.85)
 
 .scrubber
   background-color rgba(25, 25, 25, 0.4)
@@ -160,17 +171,25 @@ $contrastColor = rgba(25, 25, 25, 0.75)
     text-shadow -1px 0 $altColor, 0 1px $altColor, 1px 0 $altColor, 0 -1px $altColor
 
   .cursor
-    color $altColor
-    background-color $contrastColor
-    border-radius 0.1875rem
-    box-shadow 0 0 0 0.0625rem $altColor
-    width $cursorSize
+    display flex
+    justify-content center
+    width 6 * $cursorSize
     height $cursorSize
     margin-left -0.5 * @width
     margin-top -0.5 * @height
     line-height @height
     position absolute
     top $dotPositioning + (0.5 * $dotSize)
+
+    .content
+      flex min-content
+      min-width $cursorSize
+      color $altColor
+      background-color $contrastColor
+      border-radius 0.1875rem
+      box-shadow 0 0 0 0.0625rem $altColor
+      padding 0 .1875rem
+
 
   .tooltip
     position absolute
