@@ -91,9 +91,13 @@ export default {
       this.dotWidth = parseInt(wcs.fontSize, 10) * this.dotSpacingFactor
     },
     handleHover (event) {
-      (event.srcEvent || event).stopPropagation()
-
       const etype = event.type
+
+      // allow these through for idle tracking but stop everything else
+      if (!_.includes(['mousemove', 'mouseover', 'mouseout'], etype)) {
+        (event.srcEvent || event).stopPropagation()
+      }
+
       if (etype === 'mouseout') {
         this.hoverPage = undefined
       } else {

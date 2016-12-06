@@ -8,10 +8,10 @@ div.pswp(tabindex='-1', role='dialog', ariaHidden='true', ref='pswp')
       div.pswp__item
     div.pswp__ui.pswp__ui--hidden
       div.pswp__top-bar
-        div.pswp__counter
         button.pswp__button.pswp__button--close(title='Close (Esc)')
         button.pswp__button.pswp__button--fs(title='Toggle fullscreen')
         button.pswp__button.pswp__button--zoom(title='Zoom in/out')
+        div.pswp__title {{ title }}
         div.pswp__preloader
           div.pswp__preloader__icn
             div.pswp__preloader__cut
@@ -36,9 +36,11 @@ function getPswpOptions () {
     mainClass: 'pswp--minimal--dark',
     barsSize: { top: 0, bottom: 0 },
     captionEl: false,
-    fullscreenEl: true,
+    counterEl: false,
     shareEl: false,
     bgOpacity: 1,
+    closeElClasses: ['item', 'zoom-wrap', 'ui', 'top-bar'],
+    clickToCloseNonZoomable: false,
     closeOnScroll: false,
     tapToClose: false,
     tapToToggleControls: true,
@@ -47,7 +49,7 @@ function getPswpOptions () {
 
 export default {
   name: 'viewport',
-  props: ['items', 'loaded', 'currPage'],
+  props: ['items', 'loaded', 'currPage', 'title'],
   data () {
     return {
       gallery: undefined,
@@ -71,6 +73,14 @@ export default {
       this.gallery.listen('beforeChange', () => {
         const num = this.gallery.getCurrentIndex() + 1
         this.$emit('nav', num)
+      })
+
+      this.gallery.listen('afterChange', () => {
+        const item = this.gallery.currItem
+        if (item.alt) {
+          const img = document.querySelector(`.pswp__img[src='${item.src}']`)
+          img.setAttribute('title', item.alt)
+        }
       })
 
       this.gallery.listen('close', () => {
@@ -105,7 +115,19 @@ export default {
 }
 </script>
 
-<style>
+<style lang="stylus">
 @import "~photoswipe/dist/photoswipe.css";
 @import "~photoswipe/dist/default-skin/default-skin.css";
+
+$fontColor = #fff
+$altColor = #000
+
+.pswp__title
+  color $fontColor
+  text-shadow -1px 0 $altColor, 0 1px $altColor, 1px 0 $altColor, 0 -1px $altColor
+  cursor default
+  user-select none
+  float left
+  line-height 44px
+  padding 0 (10/16rem)
 </style>

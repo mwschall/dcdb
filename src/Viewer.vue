@@ -5,6 +5,7 @@ div.viewer#app
     :items='items',
     :loaded='dataLoaded',
     :currPage='currPage',
+    :title='title',
     @nav='gotoPage',
     @close='gotoThread',
     )
@@ -17,6 +18,7 @@ div.viewer#app
 </template>
 
 <script>
+import _ from 'lodash'
 import axios from 'axios'
 
 import ScrubberBar from './ScrubberBar.vue'
@@ -50,10 +52,12 @@ export default {
         }
       })
       this.dataLoaded = true
+      this.info = _.omitBy(response.data, (v, k) => k === 'pages')
     })
 
     return {
       items,
+      info: {},
       thread: ris.links.installment_url,
       totalPages: ris.total_pages,
       dataLoaded: false,
@@ -62,6 +66,9 @@ export default {
   computed: {
     currPage () {
       return parseInt(this.$route.params.page, 10) + 1
+    },
+    title () {
+      return this.info.name
     },
   },
   methods: {

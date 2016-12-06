@@ -23,26 +23,26 @@
 
 {% block skeletoncontent %}
 <div id="app" class="viewer">
-  <div class="viewport">
-    <img class="fit" src="{{ page.image_url }}" />
+  <div class="pswp">
+    <div class="pswp_bg"></div>
+    <div class="pswp__scroll-wrap">
+      <div class="pswp__container">
+        <div class="pswp__item">
+          <div class="pswp__zoom-wrap">
+            <img class="pswp__img" src="{{ page.image_url }}" />
+          </div>
+        </div>
+      </div>
+      <div class="pswp_ui">
+        <div class="pswp__top-bar">
+          <a
+              class="pswp__button pswp__button--close"
+              href="{{ links.installment_url }}"
+              title="Close (Esc)"></a>
+        </div>
+      </div>
+    </div>
   </div>
-  {% if links.next_url %}
-  <a class="right arrow" href="{{ links.next_url }}">
-  {% else %}
-  <a class="right arrow disabled">
-  {% endif %}
-    <span class="icon">▶</span>
-  </a>
-  {% if links.prev_url %}
-  <a class="left arrow" href="{{ links.prev_url }}">
-  {% else %}
-  <a class="left arrow disabled">
-  {% endif %}
-    <span class="icon">◀</span>
-  </a>
-  <a class="close" href="{{ links.installment_url }}">
-    <span class="icon">✘</span>
-  </a>
 </div>
 {% endblock %}
 

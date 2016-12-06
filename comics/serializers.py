@@ -16,4 +16,4 @@ class InstallmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Installment
-        fields = ('series', 'title', 'num_pages', 'has_cover', 'pages')
+        fields = ('series', 'title', 'name', 'num_pages', 'has_cover', 'pages')

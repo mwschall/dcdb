@@ -115,6 +115,10 @@ class Installment(models.Model):
         ordering = ['series', 'number']
 
     def __str__(self):
+        return self.name
+
+    @property
+    def name(self):
         return "{} #{}".format(self.series.name, self.number)
 
     @property
