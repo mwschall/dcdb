@@ -4,16 +4,18 @@ div.viewer#app
     ref='viewport',
     :items='items',
     :loaded='dataLoaded',
-    :currPage='currPage',
+    :index='index',
     :title='title',
-    @nav='gotoPage',
+    @nav='gotoIndex',
     @close='gotoThread',
     )
     scrubber-bar(
       slot='additional-ui',
-      :currPage='currPage',
+      cursor='num',
+      :items='items',
+      :index='index',
       :totalPages='totalPages',
-      @nav='gotoPage',
+      @nav='gotoIndex',
       )
 </template>
 
@@ -64,22 +66,22 @@ export default {
     }
   },
   computed: {
-    currPage () {
-      return parseInt(this.$route.params.page, 10) + 1
+    index () {
+      return parseInt(this.$route.params.page, 10)
     },
     title () {
       return this.info.name
     },
   },
   methods: {
-    getPageRoute (num) {
-      return num <= 0 || this.totalPages < num ? '' : {
+    getRoute (index) {
+      return index < 0 || this.totalPages <= index ? '' : {
         name: 'page',
-        params: Object.assign({}, this.$route.params, { page: num - 1 }),
+        params: Object.assign({}, this.$route.params, { page: index }),
       }
     },
-    gotoPage (num) {
-      const route = this.getPageRoute(num)
+    gotoIndex (index) {
+      const route = this.getRoute(index)
       if (route) {
         this.$router.push(route)
       }

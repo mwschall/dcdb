@@ -1,19 +1,19 @@
 <template lang="pug">
 div.scrubber(
-  v-touch:tap="handleNav",
-  v-touch:pan="handleHover",
-  v-touch:panend="handleNav",
-  v-touch:press="handleHover",
-  @mousedown="handleHover",
-  @mouseover="handleHover",
-  @mousemove="handleHover",
-  @mouseout="handleHover",
+  v-touch:tap='handleNav',
+  v-touch:pan='handleHover',
+  v-touch:panend='handleNav',
+  v-touch:press='handleHover',
+  @mousedown='handleHover',
+  @mouseover='handleHover',
+  @mousemove='handleHover',
+  @mouseout='handleHover',
   )
-  div.dot(v-for="n in numDots", :key="n") {{ dotContent }}
-  div.cursor(:style="cursorStyle")
+  div.dot(v-for='n in numDots', :key='n') {{ dotContent }}
+  div.cursor(:style='cursorStyle')
     div.content {{ cursorContent }}
-  div.tooltip(:style="tooltipStyle", v-show="hoverPage")
-    div.content {{ hoverPage }}
+  div.tooltip(:style='tooltipStyle', v-show='hoverIndex >= 0')
+    div.content {{ tooltipContent }}
 </template>
 
 <script>
@@ -26,12 +26,16 @@ export default {
   props: {
     cursor: {
       type: String,
-      default: 'num',
+      default: 'dot',
       validator (value) {
         return _.includes(['num', 'dot'], value)
       },
     },
-    currPage: {
+    items: {
+      type: Array,
+      required: true,
+    },
+    index: {
       type: Number,
       required: true,
     },
@@ -42,6 +46,10 @@ export default {
         return value > 0
       },
     },
+    dotContent: {
+      type: String,
+      default: DOT,
+    },
     dotSpacingFactor: {
       type: Number,
       default: 0.8,
@@ -49,41 +57,57 @@ export default {
   },
   data () {
     return {
-      cursorPage: this.currPage,
-      hoverPage: undefined,
+      cursorIndex: this.index,
+      hoverIndex: undefined,
       elWidth: 1,
       dotWidth: 1,
-      dotContent: DOT,
     }
   },
   computed: {
     numDots () {
       return Math.min(this.totalPages, Math.floor(this.elWidth / this.dotWidth))
     },
-    cursorContent () {
-      return this.cursor === 'num' ? this.cursorPage : this.dotContent
-    },
     cursorStyle () {
       return {
-        left: this.getPos(this.cursorPage, this.totalPages),
+        left: this.getPos(this.cursorIndex),
       }
+    },
+    cursorContent () {
+      if (this.cursor === 'num') {
+        return this.getLabel(this.cursorIndex)
+      }
+      return this.dotContent
     },
     tooltipStyle () {
       return {
-        left: this.getPos(this.hoverPage, this.totalPages),
+        left: this.getPos(this.hoverIndex),
       }
+    },
+    tooltipContent () {
+      return this.getLabel(this.hoverIndex)
     },
   },
   methods: {
-    getPos (num, total) {
-      return `${100 * (((2 * (num - 1)) + 1) / (2 * total))}%`
+    getLabel (index) {
+      const item = this.items[index]
+      if (item && typeof item.number !== 'undefined') {
+        return item.number
+      // } else if ('has cover') {
+      //   // do something special
+      /* eslint no-else-return: "off" */
+      } else {
+        return index + 1
+      }
     },
-    getPage (event) {
+    getPos (num) {
+      return `${100 * (((2 * num) + 1) / (2 * this.totalPages))}%`
+    },
+    getIndex (event) {
       const pageX = event.center ? event.center.x : event.pageX
       const bcr = this.$el.getBoundingClientRect()
       const hoverX = pageX - window.scrollX - bcr.left
-      const page = Math.ceil(this.totalPages * (hoverX / bcr.width))
-      return _.clamp(page, 1, this.totalPages)
+      const index = Math.floor(this.totalPages * (hoverX / bcr.width))
+      return _.clamp(index, 0, this.totalPages - 1)
     },
     computeWidths () {
       const wcs = window.getComputedStyle(this.$el)
@@ -99,13 +123,13 @@ export default {
       }
 
       if (etype === 'mouseout') {
-        this.hoverPage = undefined
+        this.hoverIndex = undefined
       } else {
-        this.hoverPage = this.getPage(event)
+        this.hoverIndex = this.getIndex(event)
 
         // cursor should track the user's mouse/finger when dragging
         if (etype === 'press' || etype === 'pan') {
-          this.cursorPage = this.hoverPage
+          this.cursorIndex = this.hoverIndex
         }
       }
     },
@@ -114,20 +138,17 @@ export default {
       // kill ephemeral mouse events post-'tap'
       event.preventDefault()
 
-      const page = this.getPage(event)
-      if (page) {
-        this.$emit('nav', page)
-      }
+      this.$emit('nav', this.getIndex(event))
 
       const etype = event.type
       if (etype === 'tap' || etype === 'panend') {
-        this.hoverPage = undefined
+        this.hoverIndex = undefined
       }
     },
   },
   watch: {
-    currPage (newPage) {
-      this.cursorPage = newPage
+    index (newIndex) {
+      this.cursorIndex = newIndex
     },
   },
   mounted () {

@@ -54,7 +54,7 @@ function getPswpOptions () {
 
 export default {
   name: 'viewport',
-  props: ['items', 'loaded', 'currPage', 'title', 'synopsis'],
+  props: ['items', 'loaded', 'index', 'title', 'synopsis'],
   data () {
     return {
       gallery: undefined,
@@ -77,13 +77,13 @@ export default {
         PhotoSwipeUIDefault,
         this.items,
         Object.assign(getPswpOptions(), {
-          index: this.currPage - 1,
+          index: this.index,
         }),
       )
 
       this.gallery.listen('beforeChange', () => {
-        const num = this.gallery.getCurrentIndex() + 1
-        this.$emit('nav', num)
+        const index = this.gallery.getCurrentIndex()
+        this.$emit('nav', index)
       })
 
       this.gallery.listen('afterChange', () => {
@@ -102,9 +102,8 @@ export default {
     },
   },
   watch: {
-    currPage (newPage) {
+    index (newIndex) {
       if (this.gallery) {
-        const newIndex = newPage - 1
         this.gallery.goTo(newIndex)
       }
     },
