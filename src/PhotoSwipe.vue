@@ -11,7 +11,12 @@ div.pswp(tabindex='-1', role='dialog', ariaHidden='true', ref='pswp')
         button.pswp__button.pswp__button--close(title='Close (Esc)')
         button.pswp__button.pswp__button--fs(title='Toggle fullscreen')
         button.pswp__button.pswp__button--zoom(title='Zoom in/out')
-        div.pswp__title {{ title }}
+        div.pswp__info(v-touch:tap='toggleTitle')
+          div.pswp__title {{ title }}
+          div.pswp__synopsis(
+            v-if='synopsis'
+            v-show='showSynopsis'
+            ) {{ synopsis }}
         div.pswp__preloader
           div.pswp__preloader__icn
             div.pswp__preloader__cut
@@ -49,13 +54,19 @@ function getPswpOptions () {
 
 export default {
   name: 'viewport',
-  props: ['items', 'loaded', 'currPage', 'title'],
+  props: ['items', 'loaded', 'currPage', 'title', 'synopsis'],
   data () {
     return {
       gallery: undefined,
+      showSynopsis: false,
     }
   },
   methods: {
+    toggleTitle () {
+      if (this.synopsis) {
+        this.showSynopsis = !this.showSynopsis
+      }
+    },
     open () {
       if (this.gallery || !this.$el) {
         return
@@ -119,15 +130,36 @@ export default {
 @import "~photoswipe/dist/photoswipe.css";
 @import "~photoswipe/dist/default-skin/default-skin.css";
 
+$barSize = 44px
+$titlePad = 10/16rem
+
 $fontColor = #fff
 $altColor = #000
+$contrastColor = rgba(25, 25, 25, 0.85)
 
-.pswp__title
+.pswp__info
   color $fontColor
-  text-shadow -1px 0 $altColor, 0 1px $altColor, 1px 0 $altColor, 0 -1px $altColor
   cursor default
   user-select none
+  font-size 1rem
   float left
-  line-height 44px
-  padding 0 (10/16rem)
+  position relative
+
+  .pswp__title
+    line-height $barSize
+    padding 0 $titlePad
+
+  .pswp__synopsis
+    background-color $contrastColor
+    border-radius 0.5 * $titlePad
+    box-sizing border-box
+    max-width 300px
+    padding 0.5 * $titlePad
+    font-size (12/16rem)
+    position absolute
+    left 0.5 * $titlePad
+    top (0.5 * $barSize) + (0.5 * @font-size * 16px) + (@left * 16px)
+
+    @media (min-width: 992px)
+      max-width 450px
 </style>
