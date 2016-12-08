@@ -9,6 +9,14 @@
     </a>
   {% endfor %}
   </div>
+  <h2>Strips</h2>
+  <div class="flow_row">
+  {% for strip in strips %}
+    <a class="flow_cell issue_cell no_cover" href="{% url 'comics:strip_page' strip.id 0 %}">
+      <h3 class="title">{{ strip.name }}</h3>
+    </a>
+  {% endfor %}
+  </div>
   <h2>Installments</h2>
   <div class="flow_row">
   {% for installment in installments %}

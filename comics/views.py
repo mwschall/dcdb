@@ -1,4 +1,4 @@
-import itertools
+from itertools import groupby
 
 import inflect
 from django.shortcuts import render, get_object_or_404
@@ -8,8 +8,8 @@ from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 
-from comics.serializers import PageSerializer, InstallmentSerializer
-from .models import Installment, Page, get_full_credits, Thread
+from comics.serializers import PageSerializer, InstallmentSerializer, SeriesSerializer, StripInstallmentSerializer
+from .models import Installment, Page, get_full_credits, Thread, Series
 
 p = inflect.engine()
 
@@ -24,7 +24,7 @@ def gen_credit_list(item):
         raw = [
             (str(r), sorted(map(lambda c: str(c.entity), rcl)))
             for r, rcl
-            in itertools.groupby(credit_list, lambda c: c.role)
+            in groupby(credit_list, lambda c: c.role)
         ]
         return [(ungettext(r, p.plural(r), len(el)), ", ".join(el)) for r, el in raw]
 
@@ -40,7 +40,7 @@ def gen_page_links(page):
     data = {
         'first_url': page_link(0),
         'last_url': page_link(last_page),
-        'installment_url': reverse('comics:installment', args=[installment_id]),
+        'thread_url': reverse('comics:installment', args=[installment_id]),
     }
 
     if page_idx > 0:
@@ -54,9 +54,11 @@ def gen_page_links(page):
 @api_view(['GET'])
 def index(request):
     threads = Thread.objects.all()
-    installments = Installment.objects.all()
+    strips = Series.objects.filter(is_strip=True)
+    installments = Installment.objects.filter(series__is_strip=False)
     context = {
         'threads': threads,
+        'strips': strips,
         'installments': installments,
     }
     return render(request, 'comics/index.html', context)
@@ -90,7 +92,40 @@ def installment_page(request, installment_id, page_idx):
     context = {
         'total_pages': page.installment.num_pages,
         'page': serializer.data,
+        'index': page_idx,
         'links': gen_page_links(page),
+    }
+
+    return Response(context, template_name='comics/page.html')
+
+
+@api_view(['GET'])
+@renderer_classes([JSONRenderer])
+def series_detail(request, series_id):
+    series = get_object_or_404(Series, pk=series_id)
+
+    serializer = SeriesSerializer(instance=series)
+    data = serializer.data
+    return Response(data)
+
+
+@api_view(['GET'])
+@renderer_classes([TemplateHTMLRenderer, JSONRenderer])
+def strip_page(request, series_id, page_idx):
+    series = get_object_or_404(Series, pk=series_id, is_strip=True)
+
+    idx = int(page_idx)
+    ins = series.pages[idx]
+
+    serializer = StripInstallmentSerializer(instance=ins)
+
+    context = {
+        'total_pages': series.installments.count(),
+        'page': serializer.data,
+        'index': idx,
+        'links': {
+            'thread_url': reverse('comics:strip', args=[series_id]),
+        },
     }
 
     return Response(context, template_name='comics/page.html')

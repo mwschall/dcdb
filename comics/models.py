@@ -8,6 +8,7 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.text import Truncator
 
 from people.models import Credit
@@ -63,6 +64,27 @@ def gen_src_loc(instance, filename):
         )
 
 
+class ImageFileMixin(object):
+    @property
+    def safe_file(self):
+        try:
+            return self.file
+        except AttributeError:
+            return self.page.file
+
+    @property
+    def image_url(self):
+        return self.safe_file.url
+
+    @property
+    def image_width(self):
+        return self.safe_file.width
+
+    @property
+    def image_height(self):
+        return self.safe_file.height
+
+
 class Series(models.Model):
     name = models.CharField(
         max_length=200,
@@ -71,6 +93,14 @@ class Series(models.Model):
         allow_unicode=True,
         max_length=20,
         unique=True,
+    )
+    is_strip = models.BooleanField(
+        default=False,
+    )
+    flip_direction = models.CharField(
+        max_length=3,
+        choices=FLIP_DIRECTION_CHOICES,
+        default=LTR,
     )
     credits = GenericRelation(
         Credit,
@@ -83,11 +113,17 @@ class Series(models.Model):
     def __str__(self):
         return "{} [{}]".format(self.name, self.slug)
 
+    @property
+    def pages(self):
+        if self.is_strip:
+            return self.installments.select_related('page').order_by('release_datetime')
 
-class Installment(models.Model):
+
+class Installment(ImageFileMixin, models.Model):
     series = models.ForeignKey(
         'Series',
-        models.CASCADE
+        models.CASCADE,
+        related_name='installments',
     )
     number = models.CharField(
         max_length=10,
@@ -95,15 +131,22 @@ class Installment(models.Model):
     title = models.CharField(
         max_length=200,
         blank=True,
-        null=True,
+    )
+    synopsis = models.TextField(
+        blank=True,
+    )
+    release_datetime = models.DateTimeField(
+        default=timezone.now
     )
     has_cover = models.BooleanField(
         default=True,
     )
-    flip_direction = models.CharField(
-        max_length=3,
-        choices=FLIP_DIRECTION_CHOICES,
-        default=LTR,
+    page = models.OneToOneField(
+        'Page',
+        models.SET_NULL,
+        related_name='strip',
+        null=True,
+        editable=False,
     )
     credits = GenericRelation(
         Credit,
@@ -140,7 +183,7 @@ class Installment(models.Model):
         return "{}_{}".format(self.series.slug, self.number)
 
 
-class SourceImage(models.Model):
+class SourceImage(ImageFileMixin, models.Model):
     file = models.ImageField(
         upload_to=gen_src_loc,
         width_field='file_width',
@@ -157,18 +200,6 @@ class SourceImage(models.Model):
     @property
     def url(self):
         return self.file.url
-
-    @property
-    def image_url(self):
-        return self.file.url
-
-    @property
-    def image_width(self):
-        return self.file.width
-
-    @property
-    def image_height(self):
-        return self.file.height
 
 
 # http://stackoverflow.com/questions/5372934/
@@ -188,9 +219,6 @@ class Page(SourceImage):
         default=0,
         editable=False,
     )
-    number = models.PositiveSmallIntegerField(
-        help_text="Essentially, the page 'name'.",
-    )
     credits = GenericRelation(
         Credit,
         related_query_name='pages',
@@ -201,13 +229,15 @@ class Page(SourceImage):
         ordering = ['order']
 
     def __str__(self):
-        # TODO: keep number or use order?
-        return "{}".format(self.number)
+        return "{}".format(self.order)
 
     @property
     def is_cover(self):
-        # TODO: does this need to be more robust?
-        return self.number == 0
+        return self.order is 0 and self.installment.has_cover
+
+    @property
+    def number(self):
+        return self.order if self.installment.has_cover else self.order + 1
 
 
 class Thread(models.Model):
@@ -217,7 +247,6 @@ class Thread(models.Model):
     )
     synopsis = models.TextField(
         blank=True,
-        null=True,
     )
     type = models.CharField(
         max_length=1,
