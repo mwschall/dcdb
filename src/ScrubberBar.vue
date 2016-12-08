@@ -233,6 +233,7 @@ $contrastColor = rgba(25, 25, 25, 0.85)
       border-radius 0.125rem
       position relative
       margin-bottom $arrowSize
+      padding 0 .1875rem
 
       &:before
         content ''

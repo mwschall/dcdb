@@ -49,6 +49,7 @@ function getPswpOptions () {
     closeOnScroll: false,
     tapToClose: false,
     tapToToggleControls: true,
+    timeToIdle: 0,
   }
 }
 

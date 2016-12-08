@@ -13,7 +13,8 @@
 {% block skeletonprecontent %}
 <script>
   window.__INITIAL_STATE__ = {
-    "base":{{ links.installment_url|json }},
+    "base":{{ links.thread_url|json }},
+    "index":{{ index|json }},
     "page":{{ page|json }},
     "links":{{ links|json }},
     "total_pages":{{ total_pages|json }}
@@ -37,7 +38,7 @@
         <div class="pswp__top-bar">
           <a
               class="pswp__button pswp__button--close"
-              href="{{ links.installment_url }}"
+              href="{{ links.thread_url }}"
               title="Close (Esc)"></a>
         </div>
       </div>

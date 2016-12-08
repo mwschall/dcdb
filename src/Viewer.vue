@@ -26,6 +26,15 @@ import axios from 'axios'
 import ScrubberBar from './ScrubberBar.vue'
 import Viewport from './PhotoSwipe.vue'
 
+function parsePage (page) {
+  return {
+    number: page.number,
+    src: page.image_url,
+    w: page.image_width,
+    h: page.image_height,
+  }
+}
+
 export default {
   name: 'viewer',
   components: { ScrubberBar, Viewport },
@@ -34,24 +43,16 @@ export default {
 
     const items = new Array(ris.total_pages)
 
-    items[ris.page.order] = {
-      src: ris.page.image_url,
-      w: ris.page.image_width,
-      h: ris.page.image_height,
-    }
+    items[ris.index] = parsePage(ris.page)
 
-    axios(ris.links.installment_url, {
+    axios(ris.links.thread_url, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
       },
     }).then((response) => {
       response.data.pages.forEach((p, i) => {
-        items[i] = {
-          src: p.image_url,
-          w: p.image_width,
-          h: p.image_height,
-        }
+        items[i] = parsePage(p)
       })
       this.dataLoaded = true
       this.info = _.omitBy(response.data, (v, k) => k === 'pages')
@@ -60,7 +61,7 @@ export default {
     return {
       items,
       info: {},
-      thread: ris.links.installment_url,
+      thread: ris.links.thread_url,
       totalPages: ris.total_pages,
       dataLoaded: false,
     }
