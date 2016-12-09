@@ -10,7 +10,7 @@ div.scrubber(
   @mouseout='handleHover',
   )
   div.dot(v-for='n in numDots', :key='n') {{ dotContent }}
-  div.cursor(:style='cursorStyle')
+  div.cursor(:style='cursorStyle', v-show='cursorIndex < total')
     div.content {{ cursorContent }}
   div.tooltip(:style='tooltipStyle', v-show='hoverIndex >= 0')
     div.content {{ tooltipContent }}
@@ -39,7 +39,7 @@ export default {
       type: Number,
       required: true,
     },
-    totalPages: {
+    total: {
       type: Number,
       required: true,
       validator (value) {
@@ -65,7 +65,7 @@ export default {
   },
   computed: {
     numDots () {
-      return Math.min(this.totalPages, Math.floor(this.elWidth / this.dotWidth))
+      return Math.min(this.total, Math.floor(this.elWidth / this.dotWidth))
     },
     cursorStyle () {
       return {
@@ -94,20 +94,18 @@ export default {
         return item.number
       // } else if ('has cover') {
       //   // do something special
-      /* eslint no-else-return: "off" */
-      } else {
-        return index + 1
       }
+      return index + 1
     },
     getPos (num) {
-      return `${100 * (((2 * num) + 1) / (2 * this.totalPages))}%`
+      return `${100 * (((2 * num) + 1) / (2 * this.total))}%`
     },
     getIndex (event) {
       const pageX = event.center ? event.center.x : event.pageX
       const bcr = this.$el.getBoundingClientRect()
       const hoverX = pageX - window.scrollX - bcr.left
-      const index = Math.floor(this.totalPages * (hoverX / bcr.width))
-      return _.clamp(index, 0, this.totalPages - 1)
+      const index = Math.floor(this.total * (hoverX / bcr.width))
+      return _.clamp(index, 0, this.total - 1)
     },
     computeWidths () {
       const wcs = window.getComputedStyle(this.$el)

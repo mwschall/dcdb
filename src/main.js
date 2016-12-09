@@ -14,10 +14,11 @@ Vue.use(VueRouter)
 Vue.use(VueTouch)
 
 /* eslint no-underscore-dangle: "off" */
-const INITIAL_STATE = window.window.__INITIAL_STATE__ || {}
+const INITIAL_STATE = window.__INITIAL_STATE__ || {}
 
 const routes = [
   { path: '/page/:page', component: Viewer, name: 'page' },
+  { path: '/next', component: Viewer, name: 'next' },
 ]
 
 const router = new VueRouter({

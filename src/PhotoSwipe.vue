@@ -1,5 +1,5 @@
 <template lang="pug">
-div.pswp(tabindex='-1', role='dialog', ariaHidden='true', ref='pswp')
+div.pswp(tabindex='-1', role='dialog', ariaHidden='true')
   div.pswp__bg
   div.pswp__scroll-wrap
     div.pswp__container
@@ -73,7 +73,7 @@ export default {
       }
 
       this.gallery = new PhotoSwipe(
-        this.$refs.pswp,
+        this.$el,
         PhotoSwipeUIDefault,
         this.items,
         Object.assign(getPswpOptions(), {
@@ -135,6 +135,17 @@ $titlePad = 10/16rem
 $fontColor = #fff
 $altColor = #000
 $contrastColor = rgba(25, 25, 25, 0.85)
+
+.no-script .pswp__img
+  touch-action none
+  max-width 100%
+  max-height 100%
+  margin auto
+  position absolute
+  left 0
+  right 0
+  top 0
+  bottom 0
 
 .pswp__info
   color $fontColor

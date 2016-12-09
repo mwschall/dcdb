@@ -4,10 +4,14 @@ from rest_framework.fields import CharField
 from comics.models import Page, Installment, Series
 
 
+PAGE_FIELDS = ('image_url', 'image_width', 'image_height',)
+THREAD_FIELDS = ('name', 'num_pages', 'pages',)
+
+
 class PageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Page
-        fields = ('image_url', 'image_width', 'image_height')
+        fields = PAGE_FIELDS
 
 
 class InstallmentSerializer(serializers.ModelSerializer):
@@ -16,20 +20,18 @@ class InstallmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Installment
-        fields = ('series', 'title', 'name', 'num_pages', 'has_cover', 'pages')
+        fields = THREAD_FIELDS + ('series', 'title', 'synopsis', 'has_cover',)
 
 
 class StripInstallmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Installment
-        fields = ('number', 'image_url', 'image_width', 'image_height')
+        fields = PAGE_FIELDS + ('number',)
 
 
 class SeriesSerializer(serializers.ModelSerializer):
-    pages = serializers.ListField(
-       child=StripInstallmentSerializer()
-    )
+    pages = StripInstallmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Series
-        fields = ('name', 'pages')
+        fields = THREAD_FIELDS

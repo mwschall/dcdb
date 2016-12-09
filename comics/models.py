@@ -85,7 +85,13 @@ class ImageFileMixin(object):
         return self.safe_file.height
 
 
-class Series(models.Model):
+class ThreadMixin(object):
+    @property
+    def num_pages(self):
+        return self.pages.count()
+
+
+class Series(ThreadMixin, models.Model):
     name = models.CharField(
         max_length=200,
     )
@@ -118,8 +124,14 @@ class Series(models.Model):
         if self.is_strip:
             return self.installments.select_related('page').order_by('release_datetime')
 
+    def index_of(self, installment):
+        for index, item in enumerate(self.installments.values_list('pk', flat=True).order_by('release_datetime')):
+            if item == installment.id:
+                return index
+        return -1
 
-class Installment(ImageFileMixin, models.Model):
+
+class Installment(ImageFileMixin, ThreadMixin, models.Model):
     series = models.ForeignKey(
         'Series',
         models.CASCADE,
@@ -169,10 +181,6 @@ class Installment(ImageFileMixin, models.Model):
         return self.pages.first() if self.has_cover else None
 
     @property
-    def num_pages(self):
-        return self.pages.count()
-
-    @property
     def is_paginated(self):
         # TODO: this is stupidly inefficient
         return self.num_pages > 1
@@ -181,6 +189,18 @@ class Installment(ImageFileMixin, models.Model):
     def slug(self):
         # TODO: any way to check if number is sequential and zero-pad?
         return "{}_{}".format(self.series.slug, self.number)
+
+    @property
+    def order(self):
+        return self.series.index_of(self)
+
+    @property
+    def next_id(self):
+        idx = self.order + 1
+        try:
+            return self.series.installments.values_list('pk', flat=True)[idx]
+        except IndexError:
+            return None
 
 
 class SourceImage(ImageFileMixin, models.Model):

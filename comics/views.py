@@ -1,7 +1,7 @@
 from itertools import groupby
 
 import inflect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import ugettext as _, ungettext
 from rest_framework.decorators import api_view, renderer_classes
@@ -51,6 +51,20 @@ def gen_page_links(page):
     return data
 
 
+def gen_thread_links(instance):
+    if isinstance(instance, Installment):
+        next_id = instance.next_id
+        return {
+            'thread': reverse('comics:installment', args=[instance.id]),
+            'next': reverse('comics:page', args=[next_id, 0]) if next_id else '',
+            'parent': reverse('comics:series', args=[instance.series_id]),
+        }
+    elif instance.is_strip:
+        return {
+            'thread': reverse('comics:strip', args=[instance.id]),
+        }
+
+
 @api_view(['GET'])
 def index(request):
     threads = Thread.objects.all()
@@ -71,8 +85,11 @@ def installment_detail(request, installment_id):
 
     if request.accepted_renderer.format == 'json':
         serializer = InstallmentSerializer(instance=installment)
-        data = serializer.data
-        return Response(data)
+        context = {
+            'thread': serializer.data,
+            'links': gen_thread_links(installment),
+        }
+        return Response(context)
     else:
         context = {
             'installment': installment,
@@ -84,29 +101,46 @@ def installment_detail(request, installment_id):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
-def installment_page(request, installment_id, page_idx):
-    page = get_object_or_404(Page, installment_id=installment_id, order=page_idx)
+def installment_page(request, installment_id, page_idx='next'):
+    if page_idx is 'next':
+        installment = get_object_or_404(Installment, pk=installment_id)
+        page = installment.pages.last()
+        print(page.order)
+    else:
+        page = get_object_or_404(Page, installment_id=installment_id, order=page_idx)
+        installment = page.installment
 
     serializer = PageSerializer(instance=page)
+    links = gen_thread_links(installment)
 
-    context = {
-        'total_pages': page.installment.num_pages,
+    initial_state = {
+        'base': links['thread'],
         'page': serializer.data,
-        'index': page_idx,
-        'links': gen_page_links(page),
+        'index': page.order,
+        'links': links,
+        'thread': {
+            'name': installment.name,
+            'num_pages': installment.num_pages,
+        },
     }
 
-    return Response(context, template_name='comics/page.html')
+    return Response({'initial_state': initial_state}, template_name='comics/page.html')
 
 
 @api_view(['GET'])
-@renderer_classes([JSONRenderer])
+@renderer_classes([TemplateHTMLRenderer, JSONRenderer])
 def series_detail(request, series_id):
     series = get_object_or_404(Series, pk=series_id)
 
-    serializer = SeriesSerializer(instance=series)
-    data = serializer.data
-    return Response(data)
+    if request.accepted_renderer.format == 'json':
+        serializer = SeriesSerializer(instance=series)
+        context = {
+            'links': gen_thread_links(series),
+            'thread': serializer.data,
+        }
+        return Response(context)
+    else:
+        return redirect('comics:index')
 
 
 @api_view(['GET'])
@@ -118,17 +152,22 @@ def strip_page(request, series_id, page_idx):
     ins = series.pages[idx]
 
     serializer = StripInstallmentSerializer(instance=ins)
-
-    context = {
-        'total_pages': series.installments.count(),
-        'page': serializer.data,
-        'index': idx,
-        'links': {
-            'thread_url': reverse('comics:strip', args=[series_id]),
-        },
+    links = {
+        'thread': reverse('comics:strip', args=[series_id]),
     }
 
-    return Response(context, template_name='comics/page.html')
+    initial_state = {
+        'base': links['thread'],
+        'page': serializer.data,
+        'index': idx,
+        'links': links,
+        'thread': {
+            'name': series.name,
+            'num_pages': series.installments.count(),
+        }
+    }
+
+    return Response({'initial_state': initial_state}, template_name='comics/page.html')
 
 
 @api_view(['GET'])

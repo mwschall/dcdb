@@ -12,25 +12,19 @@
 
 {% block skeletonprecontent %}
 <script>
-  window.__INITIAL_STATE__ = {
-    "base":{{ links.thread_url|json }},
-    "index":{{ index|json }},
-    "page":{{ page|json }},
-    "links":{{ links|json }},
-    "total_pages":{{ total_pages|json }}
-  };
+  window.__INITIAL_STATE__ = {{ initial_state|json }};
 </script>
 {% endblock %}
 
 {% block skeletoncontent %}
-<div id="app" class="viewer">
-  <div class="pswp">
-    <div class="pswp_bg"></div>
+<div id="app" class="viewer no-script">
+  <div class="pswp pswp--open pswp--minimal--dark">
+    <div class="pswp__bg" style="opacity: 1;"></div>
     <div class="pswp__scroll-wrap">
       <div class="pswp__container">
         <div class="pswp__item">
           <div class="pswp__zoom-wrap">
-            <img class="pswp__img" src="{{ page.image_url }}" />
+            <img class="pswp__img" src="{{ initial_state.page.image_url }}" />
           </div>
         </div>
       </div>
@@ -38,7 +32,7 @@
         <div class="pswp__top-bar">
           <a
               class="pswp__button pswp__button--close"
-              href="{{ links.thread_url }}"
+              href="{{ initial_state.links.thread }}"
               title="Close (Esc)"></a>
         </div>
       </div>

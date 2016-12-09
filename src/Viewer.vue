@@ -3,7 +3,7 @@ div.viewer#app
   viewport(
     ref='viewport',
     :items='items',
-    :loaded='dataLoaded',
+    :loaded='loaded',
     :index='index',
     :title='title',
     @nav='gotoIndex',
@@ -14,7 +14,7 @@ div.viewer#app
       cursor='num',
       :items='items',
       :index='index',
-      :totalPages='totalPages',
+      :total='total',
       @nav='gotoIndex',
       )
 </template>
@@ -35,51 +35,102 @@ function parsePage (page) {
   }
 }
 
+const BUTTONS = [{
+  name: 'next',
+  text: 'Next Installment',
+}, {
+  name: 'parent',
+  text: 'Back to Library',
+}]
+
+function jumpBtn (link, text) {
+  return link ? `<a href="${link}" class="button">${text}</a>` : ''
+}
+
+function insertNextSlide (items, links, total) {
+  if (links) {
+    const btns = BUTTONS.map(b => jumpBtn(links[b.name], b.text)).join('')
+
+    if (btns) {
+      const slide = {
+        html: `
+          <div class="jump slide">
+            ${btns}
+          </div>
+          `,
+      }
+
+      if (items.length === total) {
+        items.push(slide)
+      } else {
+        Object.assign(items[total], slide)
+      }
+    }
+  }
+}
+
 export default {
   name: 'viewer',
   components: { ScrubberBar, Viewport },
   data () {
     const ris = this.$root.INITIAL_STATE
 
-    const items = new Array(ris.total_pages)
+    const items = Array.from(new Array(ris.thread.num_pages), () => ({}))
+    Object.assign(items[ris.index], parsePage(ris.page))
+    insertNextSlide(items, ris.links, ris.thread.num_pages)
 
-    items[ris.index] = parsePage(ris.page)
-
-    axios(ris.links.thread_url, {
+    axios(ris.links.thread, {
       method: 'GET',
       headers: {
         Accept: 'application/json',
       },
     }).then((response) => {
-      response.data.pages.forEach((p, i) => {
-        items[i] = parsePage(p)
+      const thread = response.data.thread
+
+      this.thread = _.omitBy(thread, (v, k) => k === 'pages')
+      this.total = thread.num_pages
+      this.links = response.data.links
+      this.loaded = true
+
+      thread.pages.forEach((p, i) => {
+        Object.assign(items[i], parsePage(p))
       })
-      this.dataLoaded = true
-      this.info = _.omitBy(response.data, (v, k) => k === 'pages')
+      insertNextSlide(items, this.links, this.total)
     })
 
     return {
       items,
-      info: {},
-      thread: ris.links.thread_url,
-      totalPages: ris.total_pages,
-      dataLoaded: false,
+      thread: { name: ris.thread.name },
+      links: ris.links,
+      total: ris.thread.num_pages,
+      loaded: false,
     }
   },
   computed: {
     index () {
+      if (this.$route.name === 'next') {
+        return this.total
+      }
       return parseInt(this.$route.params.page, 10)
     },
     title () {
-      return this.info.name
+      return this.thread.name
     },
   },
   methods: {
     getRoute (index) {
-      return index < 0 || this.totalPages <= index ? '' : {
-        name: 'page',
-        params: Object.assign({}, this.$route.params, { page: index }),
+      if (index >= 0 && index < this.total) {
+        return {
+          name: 'page',
+          params: Object.assign({}, this.$route.params, { page: index }),
+        }
+      } else if (index === this.items.length - 1) {
+        return {
+          name: 'next',
+          params: this.$route.params,
+        }
       }
+      return ''
     },
     gotoIndex (index) {
       const route = this.getRoute(index)
@@ -88,13 +139,17 @@ export default {
       }
     },
     gotoThread () {
-      window.location = this.thread
+      window.location = this.links.thread
     },
   },
 }
 </script>
 
 <style lang="stylus">
+
+$btnColor = #fff
+$altBtnColor = rgba(0,0,0,.8)
+
 html
 body
 .viewer
@@ -145,4 +200,28 @@ body
   top .5rem
   left .5rem
   padding 1rem
+
+.jump.slide
+  display flex
+  flex-flow column
+  align-items center
+  justify-content center
+  position absolute
+  top 0
+  left 0
+  right 0
+  bottom 0
+
+  .button
+    border-radius (4/16rem)
+    box-shadow 0 0 0 2px $btnColor inset
+    color $btnColor
+    cursor pointer
+    text-align center
+    padding (11/16rem) 1.5rem
+    margin 0 0 1.75rem
+
+    &:hover
+      background-color $btnColor
+      color $altBtnColor
 </style>
