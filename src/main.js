@@ -1,3 +1,5 @@
+/* eslint no-underscore-dangle: "off" */
+
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import VueTouch from 'vue-touch'
@@ -13,12 +15,14 @@ VueTouch.config = {
 Vue.use(VueRouter)
 Vue.use(VueTouch)
 
-/* eslint no-underscore-dangle: "off" */
 const INITIAL_STATE = window.__INITIAL_STATE__ || {}
 
 const routes = [
-  { path: '/page/:page', component: Viewer, name: 'page' },
-  { path: '/next', component: Viewer, name: 'next' },
+  { path: '/installment/:installment/page/:page', component: Viewer, name: 'installment:page' },
+  { path: '/installment/:installment/next', component: Viewer, name: 'installment:next' },
+  { path: '/installment/:installment', name: 'installment' },
+  { path: '/strip/:strip/page/:page', component: Viewer, name: 'strip:page' },
+  { path: '/strip/:strip', name: 'strip' },
 ]
 
 const router = new VueRouter({
@@ -27,10 +31,27 @@ const router = new VueRouter({
   base: INITIAL_STATE.base,
 })
 
-const app = new Vue({
+window.__APP__ = new Vue({
   router,
-  template: `<router-view></router-view>`,
-  data: {
-    INITIAL_STATE,
+  // NOTE: you can NOT v-bind variables here or the router will silently fail
+  template: `<router-view @nav="handleNav" />`,
+  data () {
+    return {
+      INITIAL_STATE,
+    }
+  },
+  methods: {
+    handleNav (href) {
+      let link = href
+      if (href.startsWith(this.INITIAL_STATE.base)) {
+        link = href.slice(this.INITIAL_STATE.base.length - 1)
+      }
+      const name = this.$router.resolve(link).resolved.name
+      if (name && name.indexOf(':') !== -1) {
+        this.$router.push(link)
+      } else {
+        window.location = href
+      }
+    },
   },
 }).$mount('#app')

@@ -2,11 +2,12 @@
 div.viewer#app
   viewport(
     ref='viewport',
+    :index='index',
     :items='items',
     :loaded='loaded',
-    :index='index',
+    :thread='thread',
     :title='title',
-    @nav='gotoIndex',
+    @nav='handleNav',
     @close='gotoThread',
     )
     scrubber-bar(
@@ -15,7 +16,7 @@ div.viewer#app
       :items='items',
       :index='index',
       :total='total',
-      @nav='gotoIndex',
+      @nav='handleNav',
       )
 </template>
 
@@ -73,42 +74,17 @@ export default {
   name: 'viewer',
   components: { ScrubberBar, Viewport },
   data () {
-    const ris = this.$root.INITIAL_STATE
-
-    const items = Array.from(new Array(ris.thread.num_pages), () => ({}))
-    Object.assign(items[ris.index], parsePage(ris.page))
-    insertNextSlide(items, ris.links, ris.thread.num_pages)
-
-    axios(ris.links.thread, {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-      },
-    }).then((response) => {
-      const thread = response.data.thread
-
-      this.thread = _.omitBy(thread, (v, k) => k === 'pages')
-      this.total = thread.num_pages
-      this.links = response.data.links
-      this.loaded = true
-
-      thread.pages.forEach((p, i) => {
-        Object.assign(items[i], parsePage(p))
-      })
-      insertNextSlide(items, this.links, this.total)
-    })
-
     return {
-      items,
-      thread: { name: ris.thread.name },
-      links: ris.links,
-      total: ris.thread.num_pages,
+      items: [],
+      thread: {},
+      links: {},
+      total: 1,
       loaded: false,
     }
   },
   computed: {
     index () {
-      if (this.$route.name === 'next') {
+      if (this.$route.name.endsWith('next')) {
         return this.total
       }
       return parseInt(this.$route.params.page, 10)
@@ -116,17 +92,81 @@ export default {
     title () {
       return this.thread.name
     },
+    routeBase () {
+      const name = this.$route.name
+      return name.slice(0, name.indexOf(':'))
+    },
+  },
+  created () {
+    const ris = this.$root.INITIAL_STATE
+    this.total = ris.thread.num_pages
+
+    const items = Array.from(new Array(this.total), () => ({}))
+    Object.assign(items[ris.index], parsePage(ris.page))
+    insertNextSlide(items, ris.links, this.total)
+    this.items = items
+
+    this.loadThread(this.getThreadRoute(this.$route))
+  },
+  watch: {
+    $route (to, from) {
+      const toThread = this.getThreadRoute(to)
+      const fromThread = this.getThreadRoute(from)
+
+      if (!_.isEqual(toThread, fromThread)) {
+        this.loadThread(toThread)
+      }
+    },
   },
   methods: {
+    getThreadRoute (route) {
+      const TYPES = ['installment', 'strip']
+
+      const type = TYPES.filter(t => route.name.includes(t))[0]
+      if (type) {
+        return {
+          name: type,
+          params: _.pick(route.params, [type]),
+        }
+      }
+      return null
+    },
+    loadThread (link) {
+      let href = link
+      if (typeof link === 'object') {
+        href = this.$router.resolve(link).href
+      }
+      axios(href, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      }).then((response) => {
+        const thread = response.data.thread
+        const items = this.items
+
+        this.thread = _.omit(thread, ['pages'])
+        this.total = thread.num_pages
+        this.links = response.data.links
+
+        items.length = this.total
+        thread.pages.forEach((p, i) => {
+          items[i] = Object.assign(items[i] || {}, parsePage(p))
+        })
+        insertNextSlide(items, this.links, this.total)
+        this.loaded = true
+      })
+      this.loaded = false
+    },
     getRoute (index) {
       if (index >= 0 && index < this.total) {
         return {
-          name: 'page',
+          name: `${this.routeBase}:page`,
           params: Object.assign({}, this.$route.params, { page: index }),
         }
       } else if (index === this.items.length - 1) {
         return {
-          name: 'next',
+          name: `${this.routeBase}:next`,
           params: this.$route.params,
         }
       }
@@ -138,8 +178,15 @@ export default {
         this.$router.push(route)
       }
     },
+    handleNav (link) {
+      if (typeof link === 'number') {
+        this.gotoIndex(link)
+      } else {
+        this.$emit('nav', link)
+      }
+    },
     gotoThread () {
-      window.location = this.links.thread
+      this.$emit('nav', this.links.thread)
     },
   },
 }

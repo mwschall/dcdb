@@ -43,7 +43,7 @@ export default {
       type: Number,
       required: true,
       validator (value) {
-        return value > 0
+        return value >= 0
       },
     },
     dotContent: {
@@ -65,7 +65,7 @@ export default {
   },
   computed: {
     numDots () {
-      return Math.min(this.total, Math.floor(this.elWidth / this.dotWidth))
+      return Math.min(this.total, Math.floor(this.elWidth / this.dotWidth)) || 1
     },
     cursorStyle () {
       return {
@@ -87,7 +87,20 @@ export default {
       return this.getLabel(this.hoverIndex)
     },
   },
+  mounted () {
+    window.addEventListener('resize', this.computeWidths)
+    this.init()
+  },
+  beforeDestroy () {
+    window.removeEventListener('resize', this.computeWidths)
+  },
   methods: {
+    init () {
+      this.computeWidths()
+      if (!this.elWidth || !this.dotWidth) {
+        _.delay(this.init, 50)
+      }
+    },
     getLabel (index) {
       const item = this.items[index]
       if (item && typeof item.number !== 'undefined') {
@@ -148,13 +161,6 @@ export default {
     index (newIndex) {
       this.cursorIndex = newIndex
     },
-  },
-  mounted () {
-    this.$nextTick(this.computeWidths)
-    window.addEventListener('resize', this.computeWidths)
-  },
-  beforeDestroy () {
-    window.removeEventListener('resize', this.computeWidths)
   },
 }
 </script>

@@ -2,7 +2,7 @@
 div.pswp(tabindex='-1', role='dialog', ariaHidden='true')
   div.pswp__bg
   div.pswp__scroll-wrap
-    div.pswp__container
+    div.pswp__container(@click='handleNav')
       div.pswp__item
       div.pswp__item
       div.pswp__item
@@ -54,12 +54,38 @@ function getPswpOptions () {
 
 export default {
   name: 'viewport',
-  props: ['items', 'loaded', 'index', 'title', 'synopsis'],
+  props: ['index', 'items', 'loaded', 'synopsis', 'thread', 'title'],
   data () {
     return {
       gallery: undefined,
       showSynopsis: false,
     }
+  },
+  mounted () {
+    this.init()
+  },
+  beforeDestroy () {
+    if (this.gallery) {
+      this.gallery.destroy()
+    }
+  },
+  watch: {
+    index (newIndex) {
+      if (this.gallery && this.loaded) {
+        this.gallery.goTo(newIndex)
+      }
+    },
+    loaded (isLoaded) {
+      if (this.gallery && isLoaded) {
+        this.gallery.goTo(this.index)
+      }
+    },
+    thread () {
+      const pswp = this.gallery
+      pswp.invalidateCurrItems()
+      pswp.updateSize(true)
+      pswp.ui.update()
+    },
   },
   methods: {
     toggleTitle () {
@@ -67,7 +93,7 @@ export default {
         this.showSynopsis = !this.showSynopsis
       }
     },
-    open () {
+    init () {
       if (this.gallery || !this.$el) {
         return
       }
@@ -100,27 +126,14 @@ export default {
 
       this.gallery.init()
     },
-  },
-  watch: {
-    index (newIndex) {
-      if (this.gallery) {
-        this.gallery.goTo(newIndex)
+    handleNav (event) {
+      const link = event.target.getAttribute('href')
+      if (link) {
+        this.$emit('nav', link)
+        event.stopPropagation()
+        event.preventDefault()
       }
     },
-    loaded () {
-      const pswp = this.gallery
-      pswp.invalidateCurrItems()
-      pswp.updateSize(true)
-      pswp.ui.update()
-    },
-  },
-  mounted () {
-    this.open()
-  },
-  beforeDestroy () {
-    if (this.gallery) {
-      this.gallery.close()
-    }
   },
 }
 </script>

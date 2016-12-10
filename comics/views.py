@@ -29,6 +29,10 @@ def gen_credit_list(item):
         return [(ungettext(r, p.plural(r), len(el)), ", ".join(el)) for r, el in raw]
 
 
+def gen_base():
+    return reverse('comics:index')
+
+
 def gen_page_links(page):
     installment_id = page.installment.id
     page_idx = page.order
@@ -59,10 +63,11 @@ def gen_thread_links(instance):
             'next': reverse('comics:page', args=[next_id, 0]) if next_id else '',
             'parent': reverse('comics:series', args=[instance.series_id]),
         }
-    elif instance.is_strip:
-        return {
-            'thread': reverse('comics:strip', args=[instance.id]),
-        }
+    elif isinstance(instance, Series):
+        if instance.is_strip:
+            return {
+                'thread': reverse('comics:strip', args=[instance.id]),
+            }
 
 
 @api_view(['GET'])
@@ -111,13 +116,12 @@ def installment_page(request, installment_id, page_idx='next'):
         installment = page.installment
 
     serializer = PageSerializer(instance=page)
-    links = gen_thread_links(installment)
 
     initial_state = {
-        'base': links['thread'],
+        'base': gen_base(),
         'page': serializer.data,
         'index': page.order,
-        'links': links,
+        'links': gen_thread_links(installment),
         'thread': {
             'name': installment.name,
             'num_pages': installment.num_pages,
@@ -152,15 +156,14 @@ def strip_page(request, series_id, page_idx):
     ins = series.pages[idx]
 
     serializer = StripInstallmentSerializer(instance=ins)
-    links = {
-        'thread': reverse('comics:strip', args=[series_id]),
-    }
 
     initial_state = {
-        'base': links['thread'],
+        'base': gen_base(),
         'page': serializer.data,
         'index': idx,
-        'links': links,
+        'links': {
+            'thread': reverse('comics:strip', args=[series_id]),
+        },
         'thread': {
             'name': series.name,
             'num_pages': series.installments.count(),
