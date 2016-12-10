@@ -193,8 +193,11 @@ export default {
 }
 </script>
 
-<style lang="stylus">
+<style>
+@import url('http://fonts.googleapis.com/css?family=Lato');
+</style>
 
+<style lang="stylus">
 $btnColor = #fff
 $altBtnColor = rgba(0,0,0,.8)
 
@@ -206,6 +209,8 @@ body
   margin 0
 
 .viewer
+  font-family Lato,'Helvetica Neue',Arial,Helvetica,sans-serif
+
   a
     text-decoration none
 

@@ -10,9 +10,16 @@ div.scrubber(
   @mouseout='handleHover',
   )
   div.dot(v-for='n in numDots', :key='n') {{ dotContent }}
-  div.cursor(:style='cursorStyle', v-show='cursorIndex < total')
+  div.cursor(
+    :class='cursor',
+    :style='cursorStyle',
+    v-show='cursorIndex < total',
+    )
     div.content {{ cursorContent }}
-  div.tooltip(:style='tooltipStyle', v-show='hoverIndex >= 0')
+  div.tooltip(
+    :style='tooltipStyle',
+    v-show='hoverIndex >= 0'
+    )
     div.content {{ tooltipContent }}
 </template>
 
@@ -173,9 +180,10 @@ export default {
 $scrubberSize = 2rem
 $dotSize = 1rem
 $dotPositioning = 0.25 * $scrubberSize
-$cursorSize = 1rem
+$cursorSize = 1.25rem
+$cursorBorder = .0625rem
 $tooltipSize = 1.25rem
-$arrowSize = 9/16rem
+$arrowSize = .5625rem
 
 $altColor = #ddd
 $contrastColor = rgba(25, 25, 25, 0.85)
@@ -193,13 +201,13 @@ $contrastColor = rgba(25, 25, 25, 0.85)
   left 2rem
   height $scrubberSize
 
-  .dot
+  .dot:not(.cursor)
   .cursor
   .tooltip
     box-sizing border-box
     text-align center
 
-  .dot
+  .dot:not(.cursor)
     line-height $dotSize
     width 100%
     padding-top $dotPositioning
@@ -224,16 +232,21 @@ $contrastColor = rgba(25, 25, 25, 0.85)
     line-height @height
     top $dotPositioning + (0.5 * $dotSize)
 
+    &.dot
+      margin-top -0.45 * @height
+      line-height 0.9 * @height
+
     .content
       min-width $cursorSize
-      border-radius 0.1875rem
-      box-shadow 0 0 0 0.0625rem $altColor
+      border-radius .1875rem
+      box-shadow 0 0 0 $cursorBorder $altColor
       padding 0 .1875rem
 
 
   .tooltip
-    margin-top -($tooltipSize + $arrowSize)
+    margin-top -($tooltipSize + $arrowSize + 3*$cursorBorder)
     font-size $tooltipSize
+    line-height 1.1 * @font-size
     top 0
 
     .content
@@ -241,7 +254,7 @@ $contrastColor = rgba(25, 25, 25, 0.85)
       border-radius 0.125rem
       position relative
       margin-bottom $arrowSize
-      padding 0 .1875rem
+      padding .125rem .375rem .25rem
 
       &:before
         content ''
