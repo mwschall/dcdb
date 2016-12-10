@@ -26,7 +26,7 @@ class InstallmentSerializer(serializers.ModelSerializer):
 class StripInstallmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Installment
-        fields = PAGE_FIELDS + ('number',)
+        fields = PAGE_FIELDS + ('number', 'title', 'synopsis',)
 
 
 class SeriesSerializer(serializers.ModelSerializer):

@@ -1,12 +1,10 @@
 <template lang="pug">
 div.viewer#app
   viewport(
-    ref='viewport',
     :index='index',
     :items='items',
     :loaded='loaded',
     :thread='thread',
-    :title='title',
     @nav='handleNav',
     @close='gotoThread',
     )
@@ -29,12 +27,11 @@ import ScrubberBar from './ScrubberBar.vue'
 import Viewport from './PhotoSwipe.vue'
 
 function parsePage (page) {
-  return {
-    number: page.number,
+  return Object.assign({
     src: page.image_url,
     w: page.image_width,
     h: page.image_height,
-  }
+  }, _.omitBy(page, (v, k) => k.startsWith('image_')))
 }
 
 const BUTTONS = [{
@@ -89,9 +86,6 @@ export default {
         return this.total
       }
       return parseInt(this.$route.params.page, 10)
-    },
-    title () {
-      return this.thread.name
     },
     routeBase () {
       const name = this.$route.name

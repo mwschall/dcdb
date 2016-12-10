@@ -13,10 +13,8 @@ div.pswp(tabindex='-1', role='dialog', ariaHidden='true')
         button.pswp__button.pswp__button--zoom(title='Zoom in/out')
         div.pswp__info(v-touch:tap='toggleTitle')
           div.pswp__title {{ title }}
-          div.pswp__synopsis(
-            v-if='synopsis'
-            v-show='showSynopsis'
-            ) {{ synopsis }}
+          div.pswp__synopsis(v-if='synopsis' v-show='showSynopsis')
+            p {{ synopsis }}
         div.pswp__preloader
           div.pswp__preloader__icn
             div.pswp__preloader__cut
@@ -54,12 +52,37 @@ function getPswpOptions () {
 
 export default {
   name: 'viewport',
-  props: ['index', 'items', 'loaded', 'synopsis', 'thread', 'title'],
+  props: {
+    index: {
+      type: Number,
+      required: true,
+    },
+    items: {
+      type: Array,
+      required: true,
+    },
+    loaded: {
+      type: Boolean,
+      required: true,
+    },
+    thread: {
+      type: Object,
+      required: true,
+    },
+  },
   data () {
     return {
       gallery: undefined,
       showSynopsis: false,
     }
+  },
+  computed: {
+    title () {
+      return this.items[this.index].title || this.thread.name
+    },
+    synopsis () {
+      return this.items[this.index].synopsis || this.thread.synopsis
+    },
   },
   mounted () {
     this.init()
@@ -144,6 +167,7 @@ export default {
 
 $barSize = 44px
 $titlePad = 10/16rem
+$synopsisFullWidth = 450px
 
 $fontColor = #fff
 $altColor = #000
@@ -173,16 +197,22 @@ $contrastColor = rgba(25, 25, 25, 0.85)
     padding 0 $titlePad
 
   .pswp__synopsis
-    background-color $contrastColor
-    border-radius 0.5 * $titlePad
-    box-sizing border-box
-    max-width 300px
-    padding 0.5 * $titlePad
-    font-size (12/16rem)
+    width $synopsisFullWidth
     position absolute
-    left 0.5 * $titlePad
-    top (0.5 * $barSize) + (0.5 * @font-size * 16px) + (@left * 16px)
+    left .5 * $titlePad
+    top (.5 * $barSize) + (.5 * @font-size * 16px) + (@left * 16px)
 
-    @media (min-width: 992px)
-      max-width 450px
+    p
+      background-color $contrastColor
+      border-radius .5 * $titlePad
+      font-size (12/16rem)
+      max-width 300px
+      box-sizing border-box
+      margin 0
+      padding .5 * $titlePad
+      position relative
+      float left
+
+      @media (min-width: 992px)
+        max-width $synopsisFullWidth
 </style>

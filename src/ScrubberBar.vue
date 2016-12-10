@@ -31,19 +31,12 @@ const DOT = '•'
 export default {
   name: 'scrubber-bar',
   props: {
-    cursor: {
-      type: String,
-      default: 'dot',
-      validator (value) {
-        return _.includes(['num', 'dot'], value)
-      },
+    index: {
+      type: Number,
+      required: true,
     },
     items: {
       type: Array,
-      required: true,
-    },
-    index: {
-      type: Number,
       required: true,
     },
     thread: {
@@ -55,6 +48,13 @@ export default {
       required: true,
       validator (value) {
         return value >= 0
+      },
+    },
+    cursor: {
+      type: String,
+      default: 'dot',
+      validator (value) {
+        return _.includes(['num', 'dot'], value)
       },
     },
     dotContent: {
