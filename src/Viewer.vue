@@ -13,8 +13,9 @@ div.viewer#app
     scrubber-bar(
       slot='additional-ui',
       cursor='num',
-      :items='items',
       :index='index',
+      :items='items',
+      :thread='thread',
       :total='total',
       @nav='handleNav',
       )

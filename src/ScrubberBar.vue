@@ -39,6 +39,10 @@ export default {
       type: Number,
       required: true,
     },
+    thread: {
+      type: Object,
+      required: true,
+    },
     total: {
       type: Number,
       required: true,
@@ -105,8 +109,8 @@ export default {
       const item = this.items[index]
       if (item && typeof item.number !== 'undefined') {
         return item.number
-      // } else if ('has cover') {
-      //   // do something special
+      } else if (this.thread.has_cover) {
+        return index === 0 ? 'Cover' : index
       }
       return index + 1
     },
