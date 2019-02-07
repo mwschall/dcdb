@@ -22,8 +22,8 @@ FLIP_DIRECTION_CHOICES = (
 
 FREEFORM = 'F'
 STORY = 'S'
-VOLUME = 'V',
-ARC = 'A',
+VOLUME = 'V'
+ARC = 'A'
 THREAD_TYPE_CHOICES = (
     (FREEFORM, 'Freeform'),
     (STORY, 'Story'),
