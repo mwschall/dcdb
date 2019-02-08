@@ -1,6 +1,8 @@
 env:
   browser: true
-extends: airbnb-base
+extends:
+  - airbnb-base
+  - plugin:vue/recommended
 plugins:
   - html
 rules:

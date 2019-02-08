@@ -2,18 +2,15 @@
 
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import VueTouch from 'vue-touch'
+import Vue2TouchEvents from 'vue2-touch-events'
 
 import Viewer from './Viewer.vue'
 
-VueTouch.config = {
-  pan: {
-    threshold: 0,
-  },
-}
-
 Vue.use(VueRouter)
-Vue.use(VueTouch)
+Vue.use(Vue2TouchEvents, {
+  // TODO: this no longer prevents PhotoSwipe from panning under the scrubber bar
+  tapTolerance: 0,
+})
 
 const INITIAL_STATE = window.__INITIAL_STATE__ || {}
 

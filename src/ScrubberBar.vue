@@ -191,6 +191,7 @@ $contrastColor = rgba(25, 25, 25, 0.85)
 .scrubber
   border-radius .25rem .25rem 0 0
   cursor pointer
+  user-select none
 
   display flex
   flex-flow row nowrap
