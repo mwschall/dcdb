@@ -1,6 +1,6 @@
 import re
 
-from adminsortable2.admin import SortableAdminMixin
+from adminsortable2.admin import SortableAdminMixin, SortableInlineAdminMixin
 from django import forms
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
@@ -11,7 +11,7 @@ from django.db.models import F, When, Case, Value
 from django.forms import widgets
 from django.forms.formsets import DELETION_FIELD_NAME
 
-from characters.models import Persona, Appearance, Being, Classification
+from characters.models import Persona, Appearance, Being, Classification, BeingUrl
 from comics.admin import InstallmentAdmin
 from comics.models import Installment
 
@@ -169,6 +169,12 @@ class PersonaInline(admin.TabularInline):
             .order_by('-is_primary', 'name')
 
 
+class BeingUrlInline(SortableInlineAdminMixin, admin.TabularInline):
+    classes = ['collapse']
+    model = BeingUrl
+    extra = 0
+
+
 class BeingForm(forms.ModelForm):
     primary_name = forms.CharField(label='Name', required=False, disabled=True)
     primary_row = forms.IntegerField(required=False, widget=forms.HiddenInput())
@@ -196,7 +202,7 @@ class BeingAdmin(admin.ModelAdmin):
     )
     form = BeingForm
 
-    inlines = (PersonaInline,)
+    inlines = (BeingUrlInline, PersonaInline)
     exclude = ('primary_persona',)
 
     # TODO: optimize list_display queries

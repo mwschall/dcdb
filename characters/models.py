@@ -1,4 +1,5 @@
-from django.contrib.contenttypes.models import ContentType
+from urllib.parse import urlparse
+
 from django.db import models
 from django.db.models import F
 from django.utils.text import capfirst
@@ -82,6 +83,27 @@ class Being(models.Model):
     def __str__(self):
         primary = self.primary_persona
         return primary.name if primary else '(New)'
+
+
+class BeingUrl(models.Model):
+    being = models.ForeignKey(
+        'Being',
+        related_name='urls',
+        on_delete=models.CASCADE,
+    )
+    link = models.URLField()
+    order = models.PositiveSmallIntegerField(
+        default=0,
+        blank=False,
+        null=False,
+    )
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = 'url'
+
+    def __str__(self):
+        return urlparse(self.link).hostname
 
 
 class PersonaDisplayManager(models.Manager):

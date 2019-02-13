@@ -1,17 +1,19 @@
+from adminsortable2.admin import SortableInlineAdminMixin
 from django.contrib import admin
-from django.contrib.contenttypes.admin import GenericTabularInline
 
-from .models import Credit, Entity, Role
+from .models import Entity, Role, EntityUrl
 
 
-class CreditInline(GenericTabularInline):
-    model = Credit
-    extra = 1
+class EntityUrlInline(SortableInlineAdminMixin, admin.TabularInline):
+    classes = ['collapse']
+    model = EntityUrl
+    extra = 0
 
 
 @admin.register(Entity)
 class EntityAdmin(admin.ModelAdmin):
     search_fields = ('working_name',)
+    inlines = (EntityUrlInline,)
 
 
 @admin.register(Role)

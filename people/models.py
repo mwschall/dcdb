@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
@@ -20,6 +22,27 @@ class Entity(models.Model):
     def clean(self):
         # Note: DO NOT destroy inner white spacing as a matter of courtesy.
         self.working_name = self.working_name.strip()
+
+
+class EntityUrl(models.Model):
+    entity = models.ForeignKey(
+        'Entity',
+        related_name='urls',
+        on_delete=models.CASCADE,
+    )
+    link = models.URLField()
+    order = models.PositiveSmallIntegerField(
+        default=0,
+        blank=False,
+        null=False,
+    )
+
+    class Meta:
+        ordering = ['order']
+        verbose_name = 'url'
+
+    def __str__(self):
+        return urlparse(self.link).hostname
 
 
 class Role(models.Model):
