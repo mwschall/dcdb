@@ -236,6 +236,7 @@ class BeingAdmin(admin.ModelAdmin):
 
 @admin.register(Persona)
 class PersonaAdmin(admin.ModelAdmin):
+    # TODO: optimize list_display queries
     list_display = ('name', 'cls_name', aka, creators)
     search_fields = (
         'name',
@@ -260,8 +261,6 @@ class PersonaAdmin(admin.ModelAdmin):
     )
     autocomplete_fields = ('being', 'creators')
 
-    # TODO: optimize list_display queries
-
     def get_readonly_fields(self, request, obj=None):
         if obj:
             return self.readonly_fields + ('being',)
@@ -272,6 +271,23 @@ class PersonaAdmin(admin.ModelAdmin):
         if is_being_request(request) or obj is not None and not obj.is_primary:
             return super().has_delete_permission(request, obj)
         return False
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
+        if db_field.name == 'being':
+            # TODO: this doesn't actually work because of code in AutocompleteMixin.build_attrs
+            formfield.widget.attrs['data-placeholder'] = '(New)'
+        return formfield
+
+    @transaction.atomic
+    def save_model(self, request, obj, form, change):
+        new_being = None
+        if not hasattr(obj, 'being'):
+            new_being = obj.being = Being.objects.create()
+        super().save_model(request, obj, form, change)
+        if new_being:
+            new_being.primary_persona = obj
+            new_being.save(update_fields=['primary_persona'])
 
 
 #########################################
@@ -292,8 +308,8 @@ class AppearanceInlineForm(forms.ModelForm):
         )
 
     def __init__(self, *args, **kwargs):
-        initial = kwargs.get("initial", {})
-        instance = kwargs.get("instance", None)
+        initial = kwargs.get('initial', {})
+        instance = kwargs.get('instance', None)
 
         if instance is not None and hasattr(instance, 'begin_ord'):
             initial['begin_ord'] = instance.begin_ord

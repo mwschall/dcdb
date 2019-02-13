@@ -1,0 +1,12 @@
+{% extends 'admin/change_form_object_tools.html' %}
+{% load i18n admin_urls %}
+
+{% block object-tools-items %}
+{% if original.being %}
+<li>
+    {% url "admin:characters_being_change" original.being.pk|admin_urlquote as change_url %}
+    <a href="{% add_preserved_filters change_url %}" class="changelink">{% trans "Edit Being" %}</a>
+</li>
+{% endif %}
+{{ block.super }}
+{% endblock %}

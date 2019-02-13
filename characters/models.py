@@ -117,6 +117,7 @@ class Persona(models.Model):
         'Being',
         related_name='personas',
         on_delete=models.CASCADE,
+        blank=True,
     )
     name = models.CharField(
         max_length=200,
