@@ -248,4 +248,5 @@ class Appearance(models.Model):
         unique_together = ('installment', 'persona', 'page')
 
     def __str__(self):
-        return '{} in {} at [{}]'.format(self.persona, self.installment, self.page.order)
+        ordinal = self.begin_ord if hasattr(self, 'begin_ord') else self.page.order
+        return '{} in {} at [{}]'.format(self.persona, self.installment, ordinal)

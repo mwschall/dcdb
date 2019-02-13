@@ -325,30 +325,33 @@ class AppearanceInlineForm(forms.ModelForm):
 
 
 class AppearanceInlineFormset(forms.BaseInlineFormSet):
+    # NOTE: If using SQLite, ROW_NUMBER() requires sqlite3.sqlite_version >= 3.25.0
     # NOTE: Django supports Window functions, but I gave up trying to make an equivalent query happen.
     # https://stackoverflow.com/a/17046749
     def get_queryset(self):
         if not hasattr(self, '_queryset'):
             self._queryset = Appearance.objects \
                 .raw('''
-                WITH    T
-                        AS (SELECT  ROW_NUMBER() OVER (ORDER BY cp."order") - cp."order" AS grp,
-                                    cp."order" AS ordinal,
-                                    ca.*
-                            FROM    characters_appearance AS ca 
-                                    INNER JOIN comics_page AS cp
-                                    ON ca.page_id = cp.sourceimage_ptr_id
-                            WHERE   ca.installment_id = %s)
-                SELECT 	id,
-                        persona_id,
-                        installment_id,
-                        page_id,
-                        type,
+                WITH    T   /* want page sequence islands, within types, for each persona */
+                        AS (SELECT  persona_id || type || (
+                                        ROW_NUMBER()
+                                        OVER (PARTITION BY persona_id, type 
+                                              ORDER     BY "order") - "order"
+                                    ) AS grp,
+                                    "order" AS ordinal,
+                                    ca1.id AS ca1_id
+                            FROM    comics_page INNER JOIN  characters_appearance ca1
+                                                ON          sourceimage_ptr_id = page_id
+                            WHERE   ca1.installment_id = %s)
+                SELECT 	ca2.*,
                         MIN(ordinal) AS begin_ord,
                         MAX(ordinal) AS end_ord
-                FROM   	T
-                GROUP  	BY grp, type
-                ORDER  	BY MIN(ordinal)  /* TODO: also by persona name and/or end_ord) */
+                FROM   	T   INNER JOIN  characters_appearance ca2
+                            ON          T.ca1_id = ca2.id
+                            INNER JOIN  characters_persona cp
+                            ON          ca2.persona_id = cp.id
+                GROUP  	BY grp
+                ORDER  	BY MIN(ordinal), cp.name
                 ''', [self.instance.pk])
         return self._queryset
 
