@@ -118,9 +118,7 @@ class InstallmentAdmin(admin.ModelAdmin):
     @transaction.atomic
     def save_model(self, request, obj, form, change):
         page_files = request.FILES.getlist('page_files')
-        if not form.is_valid():
-            raise ValidationError('wut?')
-        elif page_files:
+        if page_files:
             pages, has_cover = parse_pages(page_files)
             pages.sort(key=lambda pi: pi['number'])
 

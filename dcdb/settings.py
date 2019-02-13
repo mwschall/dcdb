@@ -37,6 +37,7 @@ INTERNAL_IPS = [
 INSTALLED_APPS = [
     'people.apps.PeopleConfig',
     'comics.apps.ComicsConfig',
+    'characters.apps.CharactersConfig',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'debug_toolbar',
+    'adminsortable2',
     'rest_framework',
     'webpack_loader',
 ]

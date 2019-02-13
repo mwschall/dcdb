@@ -11,6 +11,7 @@ class Entity(models.Model):
     )
 
     class Meta:
+        ordering = ['working_name']
         verbose_name_plural = 'entities'
 
     def __str__(self):

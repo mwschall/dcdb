@@ -9,5 +9,11 @@ class CreditInline(GenericTabularInline):
     extra = 1
 
 
-admin.site.register(Role)
-admin.site.register(Entity)
+@admin.register(Entity)
+class EntityAdmin(admin.ModelAdmin):
+    search_fields = ('working_name',)
+
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    pass
