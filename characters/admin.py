@@ -260,6 +260,9 @@ class PersonaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # can add new Personas to Beings, but not reassign them
+        if self.instance.pk:
+            self.fields['being'].disabled = True
         # dunno if there is a better way to do this...
         self.initial['mugshot'] = self.instance.mugshot
 
@@ -293,13 +296,6 @@ class PersonaAdmin(admin.ModelAdmin):
         return obj.cls_name
     cls_name.short_description = 'Classification'
     cls_name.admin_order_field = 'classification__order'
-
-    # TODO: need to add a change link for Being somehow without making the field editable
-
-    def get_readonly_fields(self, request, obj=None):
-        if obj:
-            return self.readonly_fields + ('being',)
-        return self.readonly_fields
 
     def has_delete_permission(self, request, obj=None):
         # cannot delete primary personas
