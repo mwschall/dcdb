@@ -1,0 +1,19 @@
+<div class="related-widget-wrapper cf-container{% if widget.preview %} initial locked{% endif %}" id="{{ widget.attrs.id }}">
+  <div class="cf-display">
+    <div class="cf-preview"{% if widget.preview %} style="background-image: url('{{ widget.preview }}');"{% endif %}>
+       <a class="cf-upload file-button">
+         <span class="cf-msg">Upload</span>
+         <input type="file" name="{{ widget.name }}" accept="image/*">
+         <input type="hidden" name="{{ widget.name }}_crop"{% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}>
+       </a>
+    </div>
+    <div class="cf-wrapper">
+      <div class="cf-croppie-area"></div>
+    </div>
+  </div>
+  <div class="cf-actions">
+    <input type="button" value="Clear" class="cf-clear">
+    <input type="button" value="Cancel" class="cf-cancel">
+    <input type="button" value="Lock" class="cf-lock">
+  </div>
+</div>

@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 from django.db.models import F
 from django.utils.text import capfirst
@@ -135,12 +136,9 @@ class Persona(models.Model):
         default=1,
         help_text='Alter ego manner of being. (See: Shazam)',
     )
-    mug_shot = models.ManyToManyField(
-        'comics.SourceImage',
-        through='MugShot',
-        related_name='mug_shots_for',
-        blank=True,
-        help_text='Squarish avatar.',
+    mugshot_set = GenericRelation(
+        'comics.CroppedImage',
+        related_query_name='personas',
     )
     profile_pic = models.OneToOneField(
         'comics.SourceImage',
@@ -191,6 +189,10 @@ class Persona(models.Model):
     def cls_name(self, value):
         self._cls_name = value
 
+    @property
+    def mugshot(self):
+        return self.mugshot_set.first()
+
     objects = models.Manager()
     display_objects = PersonaDisplayManager()
 
@@ -205,22 +207,6 @@ class Persona(models.Model):
     def clean(self):
         # NOTE: Minimal cleaning is desirable and proper. Or is it?
         self.name = self.name.strip()
-
-
-class MugShot(models.Model):
-    persona = models.ForeignKey(
-        'Persona',
-        on_delete=models.CASCADE,
-    )
-    image = models.ForeignKey(
-        'comics.SourceImage',
-        on_delete=models.PROTECT,
-    )
-    # NOTE: Final display can be as a rectangle or oval.
-    center_x = models.FloatField()
-    center_y = models.FloatField()
-    width = models.FloatField()
-    height = models.FloatField()
 
 
 class Appearance(models.Model):

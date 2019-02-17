@@ -13,10 +13,12 @@ from django.forms.formsets import DELETION_FIELD_NAME
 
 from characters.models import Persona, Appearance, Being, Classification, BeingUrl
 from comics.admin import InstallmentAdmin
+from comics.forms import CroppieField
 from comics.models import Installment
 
-# TODO: find a better place for this
 MAX_ORD = 32767
+MUGSHOT_SIZE = (50, 50)
+# TODO: find a better place for these
 
 
 def is_model_request(request, model):
@@ -238,6 +240,42 @@ class BeingAdmin(admin.ModelAdmin):
 # Persona Admin                         #
 #########################################
 
+class PersonaForm(forms.ModelForm):
+    mugshot = CroppieField(
+        label='Mug shot',
+        required=False,
+        crop_size=MUGSHOT_SIZE,
+    )
+
+    class Meta:
+        model = Persona
+        fields = (
+            'being',
+            'name',
+            'type',
+            'classification',
+            'creators',
+            'mugshot',
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # dunno if there is a better way to do this...
+        self.initial['mugshot'] = self.instance.mugshot
+
+    def _save_m2m(self):
+        super()._save_m2m()
+        if 'mugshot' in self.cleaned_data:
+            ms = self.cleaned_data['mugshot']
+            is_new = bool(ms and not ms.content_object)
+            with transaction.atomic():
+                if ms is False or is_new:
+                    self.instance.mugshot_set.all().delete()
+                if is_new:
+                    ms.content_object = self.instance
+                    ms.save()
+
+
 @admin.register(Persona)
 class PersonaAdmin(admin.ModelAdmin):
     # TODO: optimize list_display queries
@@ -248,6 +286,8 @@ class PersonaAdmin(admin.ModelAdmin):
         'classification__name',
         'creators__working_name',
     )
+    form = PersonaForm
+    autocomplete_fields = ('being', 'creators')
 
     def cls_name(self, obj):
         return obj.cls_name
@@ -255,15 +295,6 @@ class PersonaAdmin(admin.ModelAdmin):
     cls_name.admin_order_field = 'classification__order'
 
     # TODO: need to add a change link for Being somehow without making the field editable
-
-    fields = (
-        'being',
-        'name',
-        'type',
-        'classification',
-        'creators',
-    )
-    autocomplete_fields = ('being', 'creators')
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
