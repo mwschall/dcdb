@@ -176,8 +176,12 @@ class BeingUrlInline(SortableInlineAdminMixin, admin.TabularInline):
 
 
 class BeingForm(forms.ModelForm):
-    primary_name = forms.CharField(label='Name', required=False, disabled=True)
-    primary_row = forms.IntegerField(required=False, widget=forms.HiddenInput())
+    primary_name = forms.CharField(
+        label='Name',
+        help_text='Persona this being is primarily known as.',
+        required=False,
+        disabled=True,
+    )
 
     class Meta:
         model = Being

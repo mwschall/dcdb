@@ -4,10 +4,14 @@ CLASSIFICATIONS = (
     ['human'],
     ['humanoid'],
 
+    ['cyborg'],
+    ['robot'],
+    ['ai'],
+
     ['demi-god'],
     ['god'],
 
-    ['metaphysical'],
+    ['metaphysical'],  # Death, etc.
 )
 
 

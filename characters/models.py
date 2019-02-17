@@ -20,14 +20,10 @@ PERSONA_TYPE_CHOICES = (
 NORMAL = 'N'
 OFF_SCREEN = 'O'
 MENTIONED = 'M'
-CAMEO = 'C'
-SPOILER = 'S'
 APPEARANCE_TYPE_CHOICES = (
     (NORMAL, 'Normal'),
     (OFF_SCREEN, 'Off Screen'),
     (MENTIONED, 'Mentioned'),
-    # TODO: Not sure if this option is necessary or proper...
-    (CAMEO, 'Cameo'),
 )
 
 
@@ -56,13 +52,15 @@ class Being(models.Model):
     primary_persona = models.OneToOneField(
         'Persona',
         related_name='primary_for',
-        # TODO: this should NEVER be null, but allowing it makes writing the admin site easier
+        # NOTE: should NEVER be null, but practically speaking it has to be enforced in business logic
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
+        help_text='What this being is primarily known as.',
     )
     bio = models.TextField(
         blank=True,
+        help_text='One-to-several paragraphs, but not a full wiki entry.',
     )
 
     @property
@@ -118,26 +116,31 @@ class Persona(models.Model):
         related_name='personas',
         on_delete=models.CASCADE,
         blank=True,
+        help_text='Singular underlying entity.',
     )
     name = models.CharField(
         max_length=200,
+        help_text='Full name, without any additional designation.',
     )
     type = models.CharField(
         max_length=2,
         choices=PERSONA_TYPE_CHOICES,
         default=GIVEN_NAME,
+        help_text='Alter ego type or purpose.',
     )
     classification = models.ForeignKey(
         'Classification',
         related_name='characters',
         on_delete=models.PROTECT,
         default=1,
+        help_text='Alter ego manner of being. (See: Shazam)',
     )
     mug_shot = models.ManyToManyField(
         'comics.SourceImage',
         through='MugShot',
         related_name='mug_shots_for',
         blank=True,
+        help_text='Squarish avatar.',
     )
     profile_pic = models.OneToOneField(
         'comics.SourceImage',
@@ -145,6 +148,7 @@ class Persona(models.Model):
         on_delete=models.PROTECT,
         blank=True,
         null=True,
+        help_text='Full body portrait.',
     )
 
     creators = models.ManyToManyField(
@@ -212,6 +216,7 @@ class MugShot(models.Model):
         'comics.SourceImage',
         on_delete=models.PROTECT,
     )
+    # NOTE: Final display can be as a rectangle or oval.
     center_x = models.FloatField()
     center_y = models.FloatField()
     width = models.FloatField()
@@ -221,7 +226,7 @@ class MugShot(models.Model):
 class Appearance(models.Model):
     persona = models.ForeignKey(
         'Persona',
-        # TODO: this should really be PROTECT, but using CASCADE during initial development
+        # TODO: PROTECT may be better, but using CASCADE during initial development
         on_delete=models.CASCADE,
     )
     installment = models.ForeignKey(
@@ -237,9 +242,11 @@ class Appearance(models.Model):
         max_length=1,
         choices=APPEARANCE_TYPE_CHOICES,
         default=NORMAL,
+        help_text='Whether visible on the page, or otherwise present.',
     )
     is_spoiler = models.BooleanField(
         default=False,
+        help_text='Obscure this appearance in certain contexts.',
     )
 
     class Meta:
@@ -248,5 +255,6 @@ class Appearance(models.Model):
         unique_together = ('installment', 'persona', 'page')
 
     def __str__(self):
+        # NOTE: begin/end_ord are the currently informal definition of a range
         ordinal = self.begin_ord if hasattr(self, 'begin_ord') else self.page.order
         return '{} in {} at [{}]'.format(self.persona, self.installment, ordinal)

@@ -9,6 +9,8 @@ ROLES = (
     ['post'],
     ['typesetter'],
 
+    ['cover'],
+
     ['editor'],
 )
 
