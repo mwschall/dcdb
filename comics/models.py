@@ -202,6 +202,16 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
         except IndexError:
             return None
 
+    @property
+    def page_count(self):
+        if not hasattr(self, '_pc'):
+            self._pc = self.pages.count()
+        return self._pc
+
+    @page_count.setter
+    def page_count(self, value):
+        self._pc = value
+
 
 class SourceImage(ImageFileMixin, models.Model):
     file = models.ImageField(

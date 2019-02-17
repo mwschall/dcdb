@@ -356,7 +356,7 @@ class AppearanceInlineFormset(forms.BaseInlineFormSet):
         return self._queryset
 
     def full_clean(self):
-        last_ord = self.instance.pages.count() - 1
+        last_ord = self.instance.page_count - 1
         msg = 'There are only %(limit_value)s pages.'
 
         # safer and better to not assume full_clean will be called only once
@@ -403,9 +403,6 @@ class AppearanceInlineFormset(forms.BaseInlineFormSet):
         self.changed_objects = []
         self.deleted_objects = []
 
-        if not self.initial_forms:
-            return []
-
         if not any([form.has_changed() for form in self.initial_forms]) and \
                 not any([form.has_changed() for form in self.extra_forms]):
             return []
@@ -415,7 +412,7 @@ class AppearanceInlineFormset(forms.BaseInlineFormSet):
         appearances = []
         for form in self.forms:
             data = form.cleaned_data
-            if data[DELETION_FIELD_NAME]:
+            if not data or data[DELETION_FIELD_NAME]:
                 continue
             appearances += [Appearance(persona=data['persona'],
                                        installment=data['installment'],

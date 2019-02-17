@@ -14,7 +14,7 @@ CLASSIFICATIONS = (
 def populate_clses(apps, schema_editor):
     cls_model = apps.get_model('characters', 'Classification')
     pk = 0
-    for cls, order in CLASSIFICATIONS:
+    for order, cls in enumerate(CLASSIFICATIONS):
         pk += 1
         vr = cls_model(pk, order=order, *cls)
         vr.save()

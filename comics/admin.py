@@ -116,6 +116,12 @@ class InstallmentAdminForm(forms.ModelForm):
         model = Installment
         fields = '__all__'
 
+    def _post_clean(self):
+        super()._post_clean()
+        page_files = self.files.getlist('page_files')
+        if page_files:
+            self.instance.page_count = len(page_files)
+
 
 class InstallmentAdmin(admin.ModelAdmin):
     form = InstallmentAdminForm
