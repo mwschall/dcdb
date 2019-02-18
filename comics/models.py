@@ -18,7 +18,7 @@ from django.utils.text import Truncator
 
 from comics.fields import ShortUUIDField
 from comics.util import s_uuid
-from people.models import Credit
+from metadata.models import Credit
 
 LTR = 'LTR'
 RTL = 'RTL'

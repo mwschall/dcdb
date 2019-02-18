@@ -19,8 +19,8 @@ from django.conf.urls.static import static
 from django.contrib import admin
 
 urlpatterns = [
-    url(r'^comics/', include('comics.urls')),
-    url(r'^characters/', include('characters.urls')),
+    url('', include('comics.urls', namespace='comics')),
+    url('', include('metadata.urls', namespace='metadata')),
     url(r'^admin/', admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

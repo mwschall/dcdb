@@ -3,13 +3,11 @@ import re
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import TabularInline
-from django.contrib.contenttypes.admin import GenericTabularInline
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db import transaction
 from django.forms import Textarea
 
-from people.models import Credit
 from .models import Installment, Series, Thread, ThreadSequence, Page
 
 
@@ -67,16 +65,8 @@ class SeriesAdminForm(forms.ModelForm):
         )
 
 
-class CreditInline(GenericTabularInline):
-    model = Credit
-    extra = 0
-
-    autocomplete_fields = ('entity',)
-
-
 class SeriesAdmin(admin.ModelAdmin):
     form = SeriesAdminForm
-    inlines = [CreditInline]
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):

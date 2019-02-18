@@ -3,6 +3,7 @@ import re
 from adminsortable2.admin import SortableAdminMixin, SortableInlineAdminMixin
 from django import forms
 from django.contrib import admin
+from django.contrib.contenttypes.admin import GenericTabularInline
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
@@ -11,10 +12,10 @@ from django.db.models import F, When, Case, Value
 from django.forms import widgets
 from django.forms.formsets import DELETION_FIELD_NAME
 
-from characters.models import Persona, Appearance, Being, Classification, BeingUrl
-from comics.admin import InstallmentAdmin
+from comics.admin import InstallmentAdmin, SeriesAdmin
 from comics.forms import CroppieField
-from comics.models import Installment
+from comics.models import Installment, Series
+from metadata.models import Persona, Appearance, Being, Classification, BeingUrl, EntityUrl, Entity, Role, Credit
 
 MAX_ORD = 32767
 MUGSHOT_SIZE = (50, 50)
@@ -41,6 +42,43 @@ def aka(obj):
 def creators(obj):
     return ', '.join(obj.creators.values_list('working_name', flat=True))
 creators.short_description = 'Creator(s)'
+
+
+#########################################
+# Entity Admin                          #
+#########################################
+
+
+class EntityUrlInline(SortableInlineAdminMixin, admin.TabularInline):
+    classes = ['collapse']
+    model = EntityUrl
+    extra = 0
+
+
+@admin.register(Entity)
+class EntityAdmin(admin.ModelAdmin):
+    search_fields = ('working_name',)
+    inlines = (EntityUrlInline,)
+
+
+@admin.register(Role)
+class RoleAdmin(admin.ModelAdmin):
+    pass
+
+
+class CreditInline(GenericTabularInline):
+    model = Credit
+    extra = 0
+
+    autocomplete_fields = ('entity',)
+
+
+admin.site.unregister(Series)
+
+
+@admin.register(Series)
+class ModSeriesAdmin(admin.ModelAdmin):
+    inlines = SeriesAdmin.inlines + [CreditInline]
 
 
 #########################################
@@ -370,19 +408,19 @@ class AppearanceInlineFormset(forms.BaseInlineFormSet):
                                               ORDER     BY "order") - "order"
                                     ) AS grp,
                                     "order" AS ordinal,
-                                    ca1.id AS ca1_id
-                            FROM    comics_page INNER JOIN  characters_appearance ca1
+                                    ma0.id AS appearance_id
+                            FROM    comics_page INNER JOIN  metadata_appearance ma0
                                                 ON          sourceimage_ptr_id = page_id
-                            WHERE   ca1.installment_id = %s)
-                SELECT 	ca2.*,
+                            WHERE   ma0.installment_id = %s)
+                SELECT 	ma1.*,
                         MIN(ordinal) AS begin_ord,
                         MAX(ordinal) AS end_ord
-                FROM   	T   INNER JOIN  characters_appearance ca2
-                            ON          T.ca1_id = ca2.id
-                            INNER JOIN  characters_persona cp
-                            ON          ca2.persona_id = cp.id
+                FROM   	T   INNER JOIN  metadata_appearance ma1
+                            ON          T.appearance_id = ma1.id
+                            INNER JOIN  metadata_persona mp0
+                            ON          ma1.persona_id = mp0.id
                 GROUP  	BY grp
-                ORDER  	BY MIN(ordinal), cp.name
+                ORDER  	BY MIN(ordinal), mp0.name
                 ''', [self.instance.pk])
         return self._queryset
 
@@ -468,9 +506,9 @@ class AppearancesInline(admin.TabularInline):
     autocomplete_fields = ('persona',)
 
 
+admin.site.unregister(Installment)
+
+
+@admin.register(Installment)
 class ModInstallmentAdmin(InstallmentAdmin):
     inlines = InstallmentAdmin.inlines + [AppearancesInline]
-
-
-admin.site.unregister(Installment)
-admin.site.register(Installment, ModInstallmentAdmin)

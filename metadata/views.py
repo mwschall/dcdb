@@ -2,8 +2,8 @@ from django.db.models.query import Prefetch
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 
-from characters.models import Being
 from comics.models import Installment, Page
+from metadata.models import Being
 
 
 @api_view(['GET'])
@@ -13,7 +13,7 @@ def being_index(request):
     context = {
         'beings': beings,
     }
-    return render(request, 'characters/beings.html', context)
+    return render(request, 'metadata/beings.html', context)
 
 
 @api_view(['GET'])
@@ -39,11 +39,11 @@ def being_page(request, being):
         WHERE   ordinal = 1 AND (
                 T.series_id	IN (SELECT  ci0.series_id
                                 FROM                comics_installment ci0
-                                        INNER JOIN  characters_appearance ca1 
-                                        ON          ca1.installment_id = ci0.id
-                                        INNER JOIN  characters_persona cp0 
-                                        ON          cp0.id = ca1.persona_id
-                                WHERE   cp0.being_id = %s))
+                                        INNER JOIN  metadata_appearance ma1 
+                                        ON          ma1.installment_id = ci0.id
+                                        INNER JOIN  metadata_persona mp0 
+                                        ON          mp0.id = ma1.persona_id
+                                WHERE   mp0.being_id = %s))
         ORDER  	BY "comics_series"."name"
         ''', [being.pk])
 
@@ -53,4 +53,4 @@ def being_page(request, being):
         'aka': ', '.join(being.aka.values_list('name', flat=True)),
         'first_issues': first_issues,
     }
-    return render(request, 'characters/being.html', context)
+    return render(request, 'metadata/being.html', context)
