@@ -25,7 +25,7 @@ def parse_pages(page_files):
                 'file': f,
             })
         else:
-            m = re.search('(?P<label>(?:\W[a-z])?0*(?P<number>\d+))\.(?P<ext>[a-z1-9]+)$', f.name, re.I)
+            m = re.search(r'^(?P<label>(?:[-_a-z\s]+(?:\d+[-_\s]+)?)?0*(?P<number>\d+)).*\.(?P<ext>[a-z1-9]+)$', f.name, re.I)
             if m:
                 number = int(m.group('number'))
                 if number is 0:
@@ -69,7 +69,9 @@ class SeriesAdminForm(forms.ModelForm):
 
 class CreditInline(GenericTabularInline):
     model = Credit
-    extra = 1
+    extra = 0
+
+    autocomplete_fields = ('entity',)
 
 
 class SeriesAdmin(admin.ModelAdmin):
