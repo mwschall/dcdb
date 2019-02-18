@@ -1,0 +1,15 @@
+{% extends 'characters/_standard.html' %}
+
+{% block content %}
+  <div>
+  {% for being in beings %}
+    <a class="mug{% if not being.mugshot.url %} no_img{% endif %}" href="{% url 'characters:being' being.id %}" title="{{ being.name }}">
+    {% if being.mugshot.url %}
+      <img src="{{ being.mugshot.url }}" alt="{{ being.name }}">
+    {% else %}
+      <span class="name">{{ being.name }}</span>
+    {% endif %}
+    </a>
+  {% endfor %}
+  </div>
+{% endblock %}

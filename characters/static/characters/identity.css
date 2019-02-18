@@ -1,0 +1,50 @@
+.mug {
+  float: left;
+  width: 50px;
+  height: 50px;
+  font-size: 0.5rem;
+  line-height: 45px;
+  word-break: break-word;
+  text-align: center;
+  text-decoration: none;
+  color: peru;
+}
+.mug.no_img {
+  width: 48px;
+  height: 48px;
+  border: 1px solid #aaa;
+}
+
+.character {
+  display: flex;
+  flex-flow: row wrap;
+}
+.profile {
+  flex: 1 0;
+  min-width: 18rem;
+  max-width: 30rem;
+  margin: 1rem;
+}
+.appearances {
+  flex: 6 1;
+  min-width: 18rem;
+  padding: 0 1rem;
+}
+
+.profile {
+  font-size: 0.75rem;
+}
+.picture {
+  text-align: center;
+}
+.info {
+  text-align: center;
+  margin: 1rem 0;
+}
+.info .name {
+  font-size: 1rem;
+  font-weight: bold;
+}
+.bio {
+  text-align: justify;
+}

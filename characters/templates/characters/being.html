@@ -1,0 +1,30 @@
+{% extends 'characters/_standard.html' %}
+
+{% block content %}
+<article class="character">
+<section class="profile">
+  <div class="picture"><img src="{{ persona.mugshot.scaled.url }}" alt="{{ persona.name }}"></div>
+  <div class="info">
+    <div class="name">{{ persona.name }}</div>
+    <div class="aka">{{ aka }}</div>
+  </div>
+  <div class="bio">{{ being.bio }}</div>
+</section>
+<section class="appearances">
+  <h2>Series</h2>
+  <div class="flow_grid">
+  {% for issue in first_issues %}
+    {% if issue.has_cover %}
+      <a class="flow_cell issue_cell" href="{% url 'comics:series' issue.series_id %}">
+        <img class="issue_cover" src="{{ issue.cover.url }}">
+      </a>
+    {% else %}
+      <a class="flow_cell issue_cell no_cover" href="{% url 'comics:series' issue.series_id %}">
+        <h3 class="title">{{ issue.series_name }}</h3>
+      </a>
+    {% endif %}
+  {% endfor %}
+  </div>
+</section>
+</article>
+{% endblock %}

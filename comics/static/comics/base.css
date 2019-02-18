@@ -8,8 +8,14 @@
 
 .flow_row .flow_cell {
   box-sizing: border-box;
-  padding: 0 0.5rem 1rem;
+  padding: 0.8rem 0.5rem 1rem;  /* NOTE: using margin will cut off the last element */
   position: relative;
+}
+.flow_row .flow_cell:first-child {
+  padding-left: 1rem;
+}
+.flow_row .flow_cell:last-child {
+  padding-right: 1rem;
 }
 
 .flow_row .no_cover {
@@ -22,7 +28,7 @@
 }
 
 .flow_row img {
-  height: 20rem;
+  height: 15rem;
 }
 
 .flow_grid {
@@ -44,6 +50,13 @@
   width: 100%;
 }
 
+.issue_cell img {
+  box-shadow: 0 0.1875rem 1.25rem -0.1875rem rgba(0,0,0,0.75);
+  transition: box-shadow 0.2s ease-out;
+}
+.issue_cell:hover img {
+  box-shadow: 0 0.1875rem 1.25rem -0.0625rem rgba(0,0,0,1);
+}
 
 .credit_cell {
   text-align: center;

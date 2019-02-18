@@ -66,7 +66,8 @@ class Being(models.Model):
 
     @property
     def name(self):
-        return str(self)
+        primary = self.primary_persona
+        return primary.name if primary else '(New)'
 
     @property
     def aka(self):
@@ -76,12 +77,16 @@ class Being(models.Model):
     def creators(self):
         return Entity.objects.filter(persona__being=self).distinct()
 
+    @property
+    def mugshot(self):
+        primary = self.primary_persona
+        return primary.mugshot if primary else None
+
     class Meta:
         ordering = ['primary_persona__name']
 
     def __str__(self):
-        primary = self.primary_persona
-        return primary.name if primary else '(New)'
+        return self.name
 
 
 class BeingUrl(models.Model):
@@ -136,6 +141,7 @@ class Persona(models.Model):
         default=1,
         help_text='Alter ego manner of being. (See: Shazam)',
     )
+    # TODO: make a PersonaImages join table and then mugshot and profile are just types
     mugshot_set = GenericRelation(
         'comics.CroppedImage',
         related_query_name='personas',

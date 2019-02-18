@@ -301,6 +301,10 @@ class CroppedImage(models.Model):
         self.scaled_width = value[0]
         self.scaled_height = value[1]
 
+    @property
+    def url(self):
+        return self.scaled.url
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.src is not None and self.box is None:

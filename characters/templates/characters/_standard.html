@@ -1,0 +1,7 @@
+{% extends 'comics/_standard.html' %}
+{% load static %}
+
+{% block skeletoncss %}
+{{ block.super }}
+<link rel="stylesheet" href="{% static 'characters/identity.css' %}">
+{% endblock %}
