@@ -307,14 +307,7 @@ class PersonaForm(forms.ModelForm):
     def _save_m2m(self):
         super()._save_m2m()
         if 'mugshot' in self.cleaned_data:
-            ms = self.cleaned_data['mugshot']
-            is_new = bool(ms and not ms.content_object)
-            with transaction.atomic():
-                if ms is False or is_new:
-                    self.instance.mugshot_set.all().delete()
-                if is_new:
-                    ms.content_object = self.instance
-                    ms.save()
+            self.instance.mugshot = self.cleaned_data['mugshot']
 
 
 @admin.register(Persona)

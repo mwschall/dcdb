@@ -4,7 +4,7 @@ from json import JSONDecodeError
 from django.forms import FileInput, ImageField
 from django.forms.widgets import FILE_INPUT_CONTRADICTION
 
-from comics.models import CroppedImage
+from comics.models import GenericImage
 
 CROPPIE_VERSION = '2.6.3'
 # TODO: install and manage croppie via npm
@@ -26,7 +26,7 @@ class CroppieInput(FileInput):
         )
 
     def format_value(self, value):
-        if isinstance(value, CroppedImage):
+        if isinstance(value, GenericImage):
             return json.dumps({
                 'url': value.src.url,
                 'points': value.box,
@@ -51,7 +51,7 @@ class CroppieInput(FileInput):
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
-        if isinstance(value, CroppedImage):
+        if isinstance(value, GenericImage):
             context['widget']['preview'] = value.scaled.url
         return context
 
@@ -70,7 +70,7 @@ class CroppieField(ImageField):
         if f is not None:
             # is maybe not correct to return a model field here, but
             # does make things cleaner
-            return CroppedImage(src=f, box=f.box, size=self.crop_size)
+            return GenericImage(src=f, box=f.box, size=self.crop_size)
 
     def run_validators(self, value):
         super().run_validators(value and value.src)

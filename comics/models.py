@@ -5,7 +5,7 @@ from pathlib import Path
 
 import shortuuid
 from PIL import Image
-from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
+from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -19,6 +19,10 @@ from django.utils.text import Truncator
 from comics.fields import ShortUUIDField
 from comics.util import s_uuid
 from metadata.models import Credit
+
+#########################################
+# Defines                               #
+#########################################
 
 LTR = 'LTR'
 RTL = 'RTL'
@@ -38,6 +42,10 @@ THREAD_TYPE_CHOICES = (
     (ARC, 'Arc'),
 )
 
+
+#########################################
+# Utility Methods                       #
+#########################################
 
 # TODO: ra ra efficiency, either prefetch_related or merge in DB
 def get_full_credits(m):
@@ -105,14 +113,12 @@ def file_cleanup(sender, instance, **kwargs):
                     pass
 
 
-class ImageFileMixin(object):
-    @property
-    def safe_file(self):
-        try:
-            return self.file
-        except AttributeError:
-            return self.page.file
+#########################################
+# Images                                #
+#########################################
 
+
+class ImageFileMixin(object):
     @property
     def image_url(self):
         return self.safe_file.url
@@ -125,6 +131,112 @@ class ImageFileMixin(object):
     def image_height(self):
         return self.safe_file.height
 
+
+class GenericImage(ImageFileMixin, models.Model):
+    id = ShortUUIDField(primary_key=True)
+    scaled = models.ImageField(
+        upload_to=get_ci_loc,
+        width_field='scaled_width',
+        height_field='scaled_height',
+    )
+    scaled_width = models.PositiveIntegerField()
+    scaled_height = models.PositiveIntegerField()
+
+    # NOTE: src is actually the core of this class; could ditch the scaled field
+    #       for some on-demand generation system in the future
+    src = models.ImageField(
+        upload_to=get_ci_src_loc,
+    )
+    # define a standard box, but final display can be as a rectangle OR oval
+    x1 = models.PositiveIntegerField(default=0)
+    y1 = models.PositiveIntegerField(default=0)
+    x2 = models.PositiveIntegerField(default=0)
+    y2 = models.PositiveIntegerField(default=0)
+
+    # TODO: corresponding cleanup task
+    is_deleted = models.BooleanField(default=False)
+
+    @property
+    def box(self):
+        return self.x1, self.y1, self.x2, self.y2
+
+    @box.setter
+    def box(self, value):
+        self.x1 = value[0]
+        self.y1 = value[1]
+        self.x2 = value[2]
+        self.y2 = value[3]
+
+    @property
+    def size(self):
+        if self.scaled_width and self.scaled_height:
+            return self.scaled_width, self.scaled_height
+        return None
+
+    @size.setter
+    def size(self, value):
+        self.scaled_width = value[0]
+        self.scaled_height = value[1]
+
+    @property
+    def safe_file(self):
+        return self.scaled
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.src is not None and self.box is None:
+            image = getattr(self.src, 'image', None)
+            if image:
+                self.box = (0, 0, image.width, image.height)
+
+
+# noinspection PyUnusedLocal
+@receiver(pre_save, sender=GenericImage)
+def scaled_img_pre_save_handler(sender, instance, **kwargs):
+    if instance.scaled:
+        return
+
+    buf = BytesIO()
+    # can't use instance.src(.file).image for some reason, so have to reopen
+    with Image.open(instance.src.file) as src:
+        try:
+            crop = src.resize(instance.size, Image.LANCZOS, instance.box)
+        except TypeError:
+            crop = src.crop(instance.box)
+        crop.save(buf, 'PNG', optimize=True)
+
+    # TODO: support output in other formats
+    instance.scaled = InMemoryUploadedFile(buf, None, 'crop.png', 'image/png', buf.tell(), None)
+
+
+post_delete.connect(file_cleanup, sender=GenericImage, dispatch_uid="comics.GenericImage.file_cleanup")
+
+
+class SourceImage(ImageFileMixin, models.Model):
+    file = models.ImageField(
+        upload_to=gen_src_loc,
+        width_field='file_width',
+        height_field='file_height',
+    )
+    file_width = models.PositiveIntegerField()
+    file_height = models.PositiveIntegerField()
+    # TODO: do we /really/ care about this?
+    # http://stackoverflow.com/questions/4892729/
+    original_name = models.CharField(
+        max_length=260,
+    )
+
+    @property
+    def safe_file(self):
+        return self.file
+
+
+post_delete.connect(file_cleanup, sender=SourceImage, dispatch_uid="comics.SourceImage.file_cleanup")
+
+
+#########################################
+# Series & Installments                 #
+#########################################
 
 class ThreadMixin(object):
     @property
@@ -253,108 +365,9 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
     def page_count(self, value):
         self._pc = value
 
-
-class CroppedImage(models.Model):
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-    id = ShortUUIDField(primary_key=True)
-    scaled = models.ImageField(
-        upload_to=get_ci_loc,
-        width_field='scaled_width',
-        height_field='scaled_height',
-    )
-    scaled_width = models.PositiveIntegerField()
-    scaled_height = models.PositiveIntegerField()
-
-    # NOTE: src is actually the core of this class; could ditch the scaled field
-    #       for some on-demand generation system in the future
-    src = models.ImageField(
-        upload_to=get_ci_src_loc,
-    )
-    # define a standard box, but final display can be as a rectangle OR oval
-    x1 = models.PositiveIntegerField(default=0)
-    y1 = models.PositiveIntegerField(default=0)
-    x2 = models.PositiveIntegerField(default=0)
-    y2 = models.PositiveIntegerField(default=0)
-
     @property
-    def box(self):
-        return self.x1, self.y1, self.x2, self.y2
-
-    @box.setter
-    def box(self, value):
-        self.x1 = value[0]
-        self.y1 = value[1]
-        self.x2 = value[2]
-        self.y2 = value[3]
-
-    @property
-    def size(self):
-        if self.scaled_width and self.scaled_height:
-            return self.scaled_width, self.scaled_height
-        return None
-
-    @size.setter
-    def size(self, value):
-        self.scaled_width = value[0]
-        self.scaled_height = value[1]
-
-    @property
-    def url(self):
-        return self.scaled.url
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.src is not None and self.box is None:
-            image = getattr(self.src, 'image', None)
-            if image:
-                self.box = (0, 0, image.width, image.height)
-
-
-# noinspection PyUnusedLocal
-@receiver(pre_save, sender=CroppedImage)
-def scaled_img_pre_save_handler(sender, instance, **kwargs):
-    if instance.scaled:
-        return
-
-    buf = BytesIO()
-    # can't use instance.src(.file).image for some reason, so have to reopen
-    with Image.open(instance.src.file) as src:
-        try:
-            crop = src.resize(instance.size, Image.LANCZOS, instance.box)
-        except TypeError:
-            crop = src.crop(instance.box)
-        crop.save(buf, 'PNG', optimize=True)
-
-    # TODO: support output in other formats
-    instance.scaled = InMemoryUploadedFile(buf, None, 'crop.png', 'image/png', buf.tell(), None)
-
-
-post_delete.connect(file_cleanup, sender=CroppedImage, dispatch_uid="comics.CroppedImage.file_cleanup")
-
-
-class SourceImage(ImageFileMixin, models.Model):
-    file = models.ImageField(
-        upload_to=gen_src_loc,
-        width_field='file_width',
-        height_field='file_height',
-    )
-    file_width = models.PositiveIntegerField()
-    file_height = models.PositiveIntegerField()
-    # TODO: do we /really/ care about this?
-    # http://stackoverflow.com/questions/4892729/
-    original_name = models.CharField(
-        max_length=260,
-    )
-
-    @property
-    def url(self):
-        return self.file.url
-
-
-post_delete.connect(file_cleanup, sender=SourceImage, dispatch_uid="comics.SourceImage.file_cleanup")
+    def safe_file(self):
+        return self.page.file
 
 
 class Page(SourceImage):
@@ -388,6 +401,10 @@ class Page(SourceImage):
     def number(self):
         return self.order if self.installment.has_cover else self.order + 1
 
+
+#########################################
+# Threads                               #
+#########################################
 
 class Thread(models.Model):
     name = models.CharField(

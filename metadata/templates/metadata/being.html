@@ -3,7 +3,7 @@
 {% block content %}
 <article class="character">
 <section class="profile">
-  <div class="picture"><img src="{{ persona.mugshot.scaled.url }}" alt="{{ persona.name }}"></div>
+  <div class="picture"><img src="{{ persona.mugshot.image_url }}" alt="{{ persona.name }}"></div>
   <div class="info">
     <div class="name">{{ persona.name }}</div>
     <div class="aka">{{ aka }}</div>
@@ -16,7 +16,7 @@
   {% for issue in first_issues %}
     {% if issue.has_cover %}
       <a class="flow_cell issue_cell" href="{% url 'comics:series' issue.series_id %}">
-        <img class="issue_cover" src="{{ issue.cover.url }}">
+        <img class="issue_cover" src="{{ issue.cover.image_url }}">
       </a>
     {% else %}
       <a class="flow_cell issue_cell no_cover" href="{% url 'comics:series' issue.series_id %}">

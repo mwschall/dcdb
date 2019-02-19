@@ -1,10 +1,16 @@
 from urllib.parse import urlparse
 
-from django.contrib.contenttypes.fields import GenericRelation, GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import models, transaction
 from django.db.models import F
+from django.db.models.signals import pre_delete
+from django.dispatch import receiver
 from django.utils.text import capfirst
+
+#########################################
+# Defines                               #
+#########################################
 
 GIVEN_NAME = 'GN'
 SUPER_IDENTITY = 'SI'
@@ -17,6 +23,13 @@ PERSONA_TYPE_CHOICES = (
     # TODO: probably need a few more for good measure, but what?
 )
 
+PROFILE = 'P'
+MUGSHOT = 'M'
+PERSONA_IMAGE_TYPE_CHOICES = (
+    (PROFILE, 'Profile'),
+    (MUGSHOT, 'Mugshot'),
+)
+
 NORMAL = 'N'
 OFF_SCREEN = 'O'
 MENTIONED = 'M'
@@ -26,6 +39,10 @@ APPEARANCE_TYPE_CHOICES = (
     (MENTIONED, 'Mentioned'),
 )
 
+
+#########################################
+# People                                #
+#########################################
 
 class Entity(models.Model):
     working_name = models.CharField(
@@ -110,6 +127,10 @@ class Credit(models.Model):
     def __hash__(self):
         return hash((self.entity, self.role))
 
+
+#########################################
+# Beings & Personas                     #
+#########################################
 
 class Classification(models.Model):
     name = models.CharField(
@@ -224,18 +245,11 @@ class Persona(models.Model):
         default=1,
         help_text='Alter ego manner of being. (See: Shazam)',
     )
-    # TODO: make a PersonaImages join table and then mugshot and profile are just types
-    mugshot_set = GenericRelation(
-        'comics.CroppedImage',
+    images = models.ManyToManyField(
+        'comics.GenericImage',
+        through='PersonaImage',
         related_query_name='personas',
-    )
-    profile_pic = models.OneToOneField(
-        'comics.SourceImage',
-        related_name='profile_of',
-        on_delete=models.PROTECT,
         blank=True,
-        null=True,
-        help_text='Full body portrait.',
     )
 
     creators = models.ManyToManyField(
@@ -280,7 +294,28 @@ class Persona(models.Model):
 
     @property
     def mugshot(self):
-        return self.mugshot_set.first()
+        try:
+            return self.images.filter(personaimage__type=MUGSHOT).first()
+        except ValueError:
+            return None
+
+    @mugshot.setter
+    @transaction.atomic
+    def mugshot(self, value):
+        current = self.mugshot
+        if value is current:
+            return
+        if current:
+            self.images \
+                .filter(personaimage__type=MUGSHOT) \
+                .update(is_deleted=True)
+            PersonaImage.objects \
+                .filter(persona=self, type=MUGSHOT) \
+                .all().delete()
+        if value:
+            value.save()
+            pi = PersonaImage(persona=self, image=value, type=MUGSHOT)
+            pi.save()
 
     objects = models.Manager()
     display_objects = PersonaDisplayManager()
@@ -296,6 +331,29 @@ class Persona(models.Model):
     def clean(self):
         # NOTE: Minimal cleaning is desirable and proper. Or is it?
         self.name = self.name.strip()
+
+
+# noinspection PyUnusedLocal
+@receiver(pre_delete, sender=Persona)
+def persona_images_delete_handler(sender, instance, **kwargs):
+    # flag is to prevent data loss should an error occur somewhere in a post_delete change
+    instance.images.update(is_deleted=True)
+
+
+class PersonaImage(models.Model):
+    persona = models.ForeignKey(
+        'Persona',
+        on_delete=models.CASCADE,
+    )
+    image = models.ForeignKey(
+        'comics.GenericImage',
+        on_delete=models.CASCADE,
+    )
+    type = models.CharField(
+        max_length=1,
+        choices=PERSONA_IMAGE_TYPE_CHOICES,
+        default=PROFILE,
+    )
 
 
 class Appearance(models.Model):
