@@ -58,7 +58,7 @@ class EntityUrlInline(SortableInlineAdminMixin, admin.TabularInline):
 @admin.register(Entity)
 class EntityAdmin(admin.ModelAdmin):
     search_fields = ('working_name',)
-    inlines = (EntityUrlInline,)
+    inlines = [EntityUrlInline]
 
 
 @admin.register(Role)
@@ -77,8 +77,8 @@ admin.site.unregister(Series)
 
 
 @admin.register(Series)
-class ModSeriesAdmin(admin.ModelAdmin):
-    inlines = SeriesAdmin.inlines + [CreditInline]
+class ModSeriesAdmin(SeriesAdmin):
+    inlines = [CreditInline] + SeriesAdmin.inlines
 
 
 #########################################
@@ -246,7 +246,7 @@ class BeingAdmin(admin.ModelAdmin):
     )
     form = BeingForm
 
-    inlines = (BeingUrlInline, PersonaInline)
+    inlines = [BeingUrlInline, PersonaInline]
     exclude = ('primary_persona',)
 
     # TODO: optimize list_display queries

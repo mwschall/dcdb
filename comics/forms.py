@@ -57,12 +57,11 @@ class CroppieInput(FileInput):
 
 
 class CroppieField(ImageField):
+    widget = CroppieInput
     # TODO: a validator for the returned crop box points
 
     def __init__(self, *, crop_size, **kwargs):
         self.crop_size = crop_size
-        if 'widget' not in kwargs:
-            kwargs['widget'] = CroppieInput()
         super().__init__(**kwargs)
 
     def to_python(self, data):

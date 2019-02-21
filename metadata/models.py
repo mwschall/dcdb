@@ -69,11 +69,7 @@ class EntityUrl(models.Model):
         on_delete=models.CASCADE,
     )
     link = models.URLField()
-    order = models.PositiveSmallIntegerField(
-        default=0,
-        blank=False,
-        null=False,
-    )
+    order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         ordering = ['order']
@@ -137,11 +133,7 @@ class Classification(models.Model):
         max_length=50,
         unique=True,
     )
-    order = models.PositiveSmallIntegerField(
-        default=0,
-        blank=False,
-        null=False,
-    )
+    order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         ordering = ['order']
@@ -200,11 +192,7 @@ class BeingUrl(models.Model):
         on_delete=models.CASCADE,
     )
     link = models.URLField()
-    order = models.PositiveSmallIntegerField(
-        default=0,
-        blank=False,
-        null=False,
-    )
+    order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         ordering = ['order']

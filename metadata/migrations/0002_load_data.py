@@ -21,17 +21,17 @@ ROLES = (
 
 
 def populate_roles(apps, schema_editor):
-    role_model = apps.get_model('metadata', 'Role')
+    model = apps.get_model('metadata', 'Role')
     pk = 0
     for role in ROLES:
         pk += 1
-        vr = role_model(pk, *role)
-        vr.save()
+        obj = model(pk, *role)
+        obj.save()
 
 
 def drop_roles(apps, schema_editor):
-    role_model = apps.get_model('metadata', 'Role')
-    role_model.objects.all().delete()
+    model = apps.get_model('metadata', 'Role')
+    model.objects.all().delete()
 
 
 #########################################
@@ -54,32 +54,22 @@ CLASSIFICATIONS = (
 
 
 def populate_clses(apps, schema_editor):
-    cls_model = apps.get_model('metadata', 'Classification')
+    model = apps.get_model('metadata', 'Classification')
     pk = 0
     for order, cls in enumerate(CLASSIFICATIONS):
         pk += 1
-        vr = cls_model(pk, order=order, *cls)
-        vr.save()
+        obj = model(pk, order=order, *cls)
+        obj.save()
 
 
 def drop_clses(apps, schema_editor):
-    cls_model = apps.get_model('metadata', 'Classification')
-    cls_model.objects.all().delete()
+    model = apps.get_model('metadata', 'Classification')
+    model.objects.all().delete()
 
 
 #########################################
-# Migrations                            #
+# Migration                             #
 #########################################
-
-def up(apps, schema_editor):
-    populate_roles(apps, schema_editor)
-    populate_clses(apps, schema_editor)
-
-
-def down(apps, schema_editor):
-    drop_clses(apps, schema_editor)
-    drop_roles(apps, schema_editor)
-
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -88,7 +78,11 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(
-            up,
-            down,
+            populate_roles,
+            drop_roles,
+        ),
+        migrations.RunPython(
+            populate_clses,
+            drop_clses,
         ),
     ]

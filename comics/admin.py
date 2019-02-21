@@ -11,6 +11,31 @@ from django.forms import Textarea
 from .models import Installment, Series, Thread, ThreadSequence, Page
 
 
+#########################################
+# Installment Form                      #
+#########################################
+
+class InstallmentAdminForm(forms.ModelForm):
+    page_files = forms.FileField(
+        widget=forms.ClearableFileInput(attrs={'multiple': True}),
+        required=False,
+    )
+
+    class Meta:
+        model = Installment
+        fields = '__all__'
+
+    def _post_clean(self):
+        super()._post_clean()
+        page_files = self.files.getlist('page_files')
+        if page_files:
+            self.instance.page_count = len(page_files)
+
+
+#########################################
+# Series Admin                          #
+#########################################
+
 def parse_pages(page_files):
     has_cover = False
     pages = []
@@ -65,7 +90,9 @@ class SeriesAdminForm(forms.ModelForm):
         )
 
 
+@admin.register(Series)
 class SeriesAdmin(admin.ModelAdmin):
+    search_fields = ('name',)
     form = SeriesAdminForm
 
     @transaction.atomic
@@ -98,25 +125,14 @@ class SeriesAdmin(admin.ModelAdmin):
             obj.save()
 
 
-class InstallmentAdminForm(forms.ModelForm):
-    page_files = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={'multiple': True}),
-        required=False,
-    )
+#########################################
+# Installment Admin                     #
+#########################################
 
-    class Meta:
-        model = Installment
-        fields = '__all__'
-
-    def _post_clean(self):
-        super()._post_clean()
-        page_files = self.files.getlist('page_files')
-        if page_files:
-            self.instance.page_count = len(page_files)
-
-
+@admin.register(Installment)
 class InstallmentAdmin(admin.ModelAdmin):
     form = InstallmentAdminForm
+    autocomplete_fields = ('series',)
     readonly_fields = ('has_cover',)
 
     @transaction.atomic
@@ -140,11 +156,16 @@ class InstallmentAdmin(admin.ModelAdmin):
             obj.save()
 
 
+#########################################
+# Thread Admin                          #
+#########################################
+
 class ThreadSequenceInline(TabularInline):
     model = ThreadSequence
     extra = 1
 
 
+@admin.register(Thread)
 class ThreadAdmin(admin.ModelAdmin):
     inlines = [ThreadSequenceInline]
     formfield_overrides = {
@@ -155,8 +176,3 @@ class ThreadAdmin(admin.ModelAdmin):
             )
         },
     }
-
-
-admin.site.register(Installment, InstallmentAdmin)
-admin.site.register(Series, SeriesAdmin)
-admin.site.register(Thread, ThreadAdmin)

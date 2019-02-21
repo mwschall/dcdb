@@ -158,7 +158,9 @@ class GenericImage(ImageFileMixin, models.Model):
 
     @property
     def box(self):
-        return self.x1, self.y1, self.x2, self.y2
+        if self.x2 > self.x1 and self.y2 > self.y1:
+            return self.x1, self.y1, self.x2, self.y2
+        return None
 
     @box.setter
     def box(self, value):
