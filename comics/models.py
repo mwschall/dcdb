@@ -1,4 +1,5 @@
 import os
+import re
 from io import BytesIO
 from itertools import chain
 from pathlib import Path
@@ -14,7 +15,7 @@ from django.db.models import Q
 from django.db.models.signals import post_delete, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django.utils.text import Truncator
+from django.utils.text import Truncator, capfirst
 
 from comics.fields import ShortUUIDField
 from comics.util import s_uuid
@@ -240,6 +241,32 @@ post_delete.connect(file_cleanup, sender=SourceImage, dispatch_uid="comics.Sourc
 # Series & Installments                 #
 #########################################
 
+class InstallmentLabel(models.Model):
+    value = models.CharField(
+        max_length=50,
+        unique=True,
+    )
+
+    class Meta:
+        ordering = ['value']
+
+    def __str__(self):
+        return self.display_value
+
+    @property
+    def display_value(self):
+        return capfirst(self.value)
+
+    def save(self, *args, **kwargs):
+        # perform some basic normalization
+        self.value = re.sub(r'\s+', ' ', self.value).strip().lower()
+        super().save(*args, **kwargs)
+
+    @staticmethod
+    def get_default_label():
+        return InstallmentLabel.objects.first()
+
+
 class ThreadMixin(object):
     @property
     def num_pages(self):
@@ -257,6 +284,12 @@ class Series(ThreadMixin, models.Model):
     )
     is_strip = models.BooleanField(
         default=False,
+    )
+    installment_label = models.ForeignKey(
+        'InstallmentLabel',
+        on_delete=models.PROTECT,
+        default=InstallmentLabel.get_default_label,
+        help_text='Numbers will be prefixed with this value when displayed.'
     )
     flip_direction = models.CharField(
         max_length=3,
@@ -329,7 +362,18 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
 
     @property
     def name(self):
-        return "{} #{}".format(self.series.name, self.number)
+        name = [self.series.name]
+        if self.number is not None:
+            label = self.label
+            spacer = '' if re.search(r'\W$', label) else ' '
+            name += [' ', label, spacer, self.number]
+        if self.title:
+            name += [' — ', self.title]
+        return ''.join(name)
+
+    @property
+    def label(self):
+        return self.series.installment_label.display_value
 
     @property
     def cover(self):

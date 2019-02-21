@@ -4,7 +4,6 @@ from adminsortable2.admin import SortableAdminMixin, SortableInlineAdminMixin
 from django import forms
 from django.contrib import admin
 from django.contrib.contenttypes.admin import GenericTabularInline
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import models, transaction
@@ -15,16 +14,12 @@ from django.forms.formsets import DELETION_FIELD_NAME
 from comics.admin import InstallmentAdmin, SeriesAdmin
 from comics.forms import CroppieField
 from comics.models import Installment, Series
+from comics.util import is_model_request
 from metadata.models import Persona, Appearance, Being, Classification, BeingUrl, EntityUrl, Entity, Role, Credit
 
 MAX_ORD = 32767
 MUGSHOT_SIZE = (50, 50)
 # TODO: find a better place for these
-
-
-def is_model_request(request, model):
-    ct = ContentType.objects.get_for_model(model)
-    return re.search('/{}/{}/'.format(ct.app_label, ct.model), request.path)
 
 
 def is_being_request(request):

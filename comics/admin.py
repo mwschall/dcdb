@@ -8,7 +8,12 @@ from django.db import models
 from django.db import transaction
 from django.forms import Textarea
 
-from .models import Installment, Series, Thread, ThreadSequence, Page
+from comics.util import is_model_request
+from .models import Installment, Series, Thread, ThreadSequence, Page, InstallmentLabel
+
+
+def is_series_request(request):
+    return is_model_request(request, Series)
 
 
 #########################################
@@ -30,6 +35,25 @@ class InstallmentAdminForm(forms.ModelForm):
         page_files = self.files.getlist('page_files')
         if page_files:
             self.instance.page_count = len(page_files)
+
+
+#########################################
+# InstallmentLabel Admin                #
+#########################################
+
+@admin.register(InstallmentLabel)
+class InstallmentLabelAdmin(admin.ModelAdmin):
+    search_fields = ('value',)
+
+    def has_change_permission(self, request, obj=None):
+        if is_series_request(request):
+            return False
+        return super().has_change_permission(request, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        if is_series_request(request):
+            return False
+        return super().has_delete_permission(request, obj)
 
 
 #########################################
@@ -84,6 +108,7 @@ class SeriesAdminForm(forms.ModelForm):
         fields = (
             'name',
             'slug',
+            'installment_label',
             'flip_direction',
             'strip_files',
             'is_strip',
