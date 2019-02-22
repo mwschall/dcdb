@@ -1,7 +1,5 @@
 from urllib.parse import urlparse
 
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.db import models, transaction
 from django.db.models import F
 from django.db.models.signals import pre_delete
@@ -14,14 +12,16 @@ from django.utils.text import capfirst
 
 GIVEN_NAME = 'GN'
 SUPER_IDENTITY = 'SI'
-ALIAS = 'JJ'
 ALTERNATE_PERSONALITY = 'AP'
+ALIAS = 'JJ'
+ROLE = 'RP'
 PERSONA_TYPE_CHOICES = (
     # NOTE: multiple Given Names are allowed (see: Superman)
     (GIVEN_NAME, 'Given Name'),
     (SUPER_IDENTITY, 'Super Identity'),
-    (ALIAS, 'Alias'),
     (ALTERNATE_PERSONALITY, 'Alternate Personality'),
+    (ALIAS, 'Alias'),
+    (ROLE, 'Role')
     # TODO: probably need a few more for good measure, but what?
 )
 
@@ -43,13 +43,21 @@ APPEARANCE_TYPE_CHOICES = (
 
 
 #########################################
-# People                                #
+# Creative Entities and Roles           #
 #########################################
 
 class Entity(models.Model):
     working_name = models.CharField(
         max_length=100,
         unique=True,
+        help_text='Name of person/group/collective/circle/etc.'
+    )
+    # TODO: sort_name field?
+
+    works = models.ManyToManyField(
+        'comics.Installment',
+        through='Credit',
+        related_name='entities',
     )
 
     class Meta:
@@ -71,7 +79,10 @@ class EntityUrl(models.Model):
         on_delete=models.CASCADE,
     )
     link = models.URLField()
-    order = models.PositiveSmallIntegerField(default=0)
+    order = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Preferred display order.'
+    )
 
     class Meta:
         ordering = ['order']
@@ -87,9 +98,13 @@ class Role(models.Model):
         unique=True,
     )
     # TODO: 'importance' metric as opposed to strict 'order'?
+    order = models.PositiveSmallIntegerField(
+        default=0,
+        help_text='Default order to list different role types.'
+    )
 
     class Meta:
-        ordering = ['name']
+        ordering = ['order']
 
     def __str__(self):
         return capfirst(self.name)
@@ -99,25 +114,24 @@ class Role(models.Model):
 
 
 class Credit(models.Model):
-    content_type = models.ForeignKey(
-        ContentType,
-        models.CASCADE,
+    installment = models.ForeignKey(
+        'comics.Installment',
+        related_name='credits',
+        on_delete=models.CASCADE,
     )
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey()
-
     entity = models.ForeignKey(
-        Entity,
-        models.CASCADE,
+        'Entity',
+        related_name='credits',
+        on_delete=models.CASCADE,
     )
     role = models.ForeignKey(
-        Role,
-        models.CASCADE,
+        'Role',
+        on_delete=models.CASCADE,
     )
 
     class Meta:
-        # TODO: This doesn't fail gracefully.
-        unique_together = ('object_id', 'content_type', 'entity', 'role')
+        ordering = ['role__order', 'entity__working_name']
+        unique_together = ('installment', 'role', 'entity')
 
     def __str__(self):
         return '%s [%s]' % (self.entity, self.role)

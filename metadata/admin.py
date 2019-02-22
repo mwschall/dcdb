@@ -3,7 +3,7 @@ import re
 from adminsortable2.admin import SortableAdminMixin, SortableInlineAdminMixin
 from django import forms
 from django.contrib import admin
-from django.contrib.contenttypes.admin import GenericTabularInline
+from django.contrib.admin import TabularInline
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator
 from django.db import models, transaction
@@ -11,9 +11,9 @@ from django.db.models import F, When, Case, Value
 from django.forms import widgets
 from django.forms.formsets import DELETION_FIELD_NAME
 
-from comics.admin import InstallmentAdmin, SeriesAdmin
+from comics.admin import InstallmentAdmin
 from comics.forms import CroppieField
-from comics.models import Installment, Series
+from comics.models import Installment
 from comics.util import is_model_request
 from metadata.models import Persona, Appearance, Character, Classification, CharacterUrl, EntityUrl, Entity, Role, \
     Credit
@@ -58,23 +58,8 @@ class EntityAdmin(admin.ModelAdmin):
 
 
 @admin.register(Role)
-class RoleAdmin(admin.ModelAdmin):
+class RoleAdmin(SortableAdminMixin, admin.ModelAdmin):
     pass
-
-
-class CreditInline(GenericTabularInline):
-    model = Credit
-    extra = 0
-
-    autocomplete_fields = ('entity',)
-
-
-admin.site.unregister(Series)
-
-
-@admin.register(Series)
-class ModSeriesAdmin(SeriesAdmin):
-    inlines = [CreditInline] + SeriesAdmin.inlines
 
 
 #########################################
@@ -484,6 +469,17 @@ class AppearanceInlineFormset(forms.BaseInlineFormSet):
         return self.instance.appearances.bulk_create(appearances)
 
 
+class CreditInline(TabularInline):
+    model = Credit
+    extra = 0
+
+    fields = (
+        'entity',
+        'role',
+    )
+    autocomplete_fields = ('entity',)
+
+
 class AppearancesInline(admin.TabularInline):
     begin_ord = models.PositiveSmallIntegerField()
     end_ord = models.PositiveSmallIntegerField()
@@ -501,4 +497,4 @@ admin.site.unregister(Installment)
 
 @admin.register(Installment)
 class ModInstallmentAdmin(InstallmentAdmin):
-    inlines = InstallmentAdmin.inlines + [AppearancesInline]
+    inlines = InstallmentAdmin.inlines + [CreditInline, AppearancesInline]

@@ -9,24 +9,21 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 
 from comics.serializers import PageSerializer, InstallmentSerializer, SeriesSerializer, StripInstallmentSerializer
-from .models import Installment, Page, get_full_credits, Thread, Series
+from .models import Installment, Page, Thread, Series
 
 p = inflect.engine()
 
 
 # See also: http://stackoverflow.com/questions/480214/
-def gen_credit_list(item):
-    credit_list = get_full_credits(item)
+def fmt_credit_list(credit_list):
     if len({c.entity for c in credit_list}) == 1:
         return [(_("by"), credit_list[0].entity)]
     else:
-        # TODO: sort by role importance
         raw = [
-            (str(r), sorted(map(lambda c: str(c.entity), rcl)))
-            for r, rcl
-            in groupby(credit_list, lambda c: c.role)
+            (str(r), tuple(map(lambda c: str(c.entity), cl)))
+            for r, cl in groupby(credit_list, lambda c: c.role)
         ]
-        return [(ungettext(r, p.plural(r), len(el)), ", ".join(el)) for r, el in raw]
+        return [(ungettext(r, p.plural(r), len(el)), ', '.join(el)) for r, el in raw]
 
 
 def gen_base():
@@ -96,9 +93,12 @@ def installment_detail(request, installment):
         }
         return Response(context)
     else:
+        credit_list = installment.credits \
+            .select_related('role', 'entity') \
+            .all()
         context = {
             'installment': installment,
-            'credits': gen_credit_list(installment),
+            'credits': fmt_credit_list(credit_list),
             'pages': installment.pages.all,
         }
         return Response(context, template_name='comics/installment.html')

@@ -25,7 +25,7 @@ def populate_roles(apps, schema_editor):
     pk = 0
     for role in ROLES:
         pk += 1
-        obj = model(pk, *role)
+        obj = model(pk, order=pk, *role)
         obj.save()
 
 
@@ -56,9 +56,9 @@ CLASSIFICATIONS = (
 def populate_clses(apps, schema_editor):
     model = apps.get_model('metadata', 'Classification')
     pk = 0
-    for order, cls in enumerate(CLASSIFICATIONS):
+    for cls in CLASSIFICATIONS:
         pk += 1
-        obj = model(pk, order=order, *cls)
+        obj = model(pk, order=pk, *cls)
         obj.save()
 
 

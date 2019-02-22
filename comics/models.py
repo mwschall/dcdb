@@ -6,8 +6,6 @@ from pathlib import Path
 
 import shortuuid
 from PIL import Image
-from django.contrib.contenttypes.fields import GenericRelation
-from django.contrib.contenttypes.models import ContentType
 from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
@@ -19,7 +17,6 @@ from django.utils.text import Truncator, capfirst
 
 from comics.fields import ShortUUIDField
 from comics.util import s_uuid, unpack_numeral
-from metadata.models import Credit
 
 #########################################
 # Defines                               #
@@ -47,22 +44,6 @@ THREAD_TYPE_CHOICES = (
 #########################################
 # Utility Methods                       #
 #########################################
-
-# TODO: ra ra efficiency, either prefetch_related or merge in DB
-def get_full_credits(m):
-    credit_set = set()
-
-    if isinstance(m, Page):
-        credit_set = credit_set | set(m.credits.all())
-        m = m.installment
-    if isinstance(m, Installment):
-        credit_set = credit_set | set(m.credits.all())
-        m = m.series
-    if isinstance(m, Series):
-        credit_set = credit_set | set(m.credits.all())
-
-    return list(credit_set)
-
 
 def get_ci_loc(instance, filename):
     return "profiles/{}{}".format(instance.id, Path(filename).suffix)
@@ -296,10 +277,6 @@ class Series(ThreadMixin, models.Model):
         choices=FLIP_DIRECTION_CHOICES,
         default=LTR,
     )
-    credits = GenericRelation(
-        Credit,
-        related_query_name='series',
-    )
 
     class Meta:
         verbose_name_plural = "series"
@@ -354,10 +331,6 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
         related_name='strip',
         null=True,
         editable=False,
-    )
-    credits = GenericRelation(
-        Credit,
-        related_query_name='installments',
     )
 
     class Meta:
@@ -437,10 +410,6 @@ class Page(SourceImage):
         help_text='The 0-indexed ordering within parent Installment.',
         default=0,
         editable=False,
-    )
-    credits = GenericRelation(
-        Credit,
-        related_query_name='pages',
     )
 
     class Meta:
