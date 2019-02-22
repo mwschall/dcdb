@@ -15,15 +15,16 @@ from comics.admin import InstallmentAdmin, SeriesAdmin
 from comics.forms import CroppieField
 from comics.models import Installment, Series
 from comics.util import is_model_request
-from metadata.models import Persona, Appearance, Being, Classification, BeingUrl, EntityUrl, Entity, Role, Credit
+from metadata.models import Persona, Appearance, Character, Classification, CharacterUrl, EntityUrl, Entity, Role, \
+    Credit
 
 MAX_ORD = 32767
 MUGSHOT_SIZE = (50, 50)
 # TODO: find a better place for these
 
 
-def is_being_request(request):
-    return is_model_request(request, Being)
+def is_character_request(request):
+    return is_model_request(request, Character)
 
 
 def is_persona_request(request):
@@ -84,23 +85,23 @@ class ModSeriesAdmin(SeriesAdmin):
 class ClassificationAdmin(SortableAdminMixin, admin.ModelAdmin):
     # disable RelatedFieldWidgetWrapper buttons for a cleaner interface
     def has_add_permission(self, request):
-        if is_being_request(request):
+        if is_character_request(request):
             return False
         return super().has_add_permission(request)
 
     def has_change_permission(self, request, obj=None):
-        if is_being_request(request):
+        if is_character_request(request):
             return False
         return super().has_change_permission(request, obj)
 
     def has_delete_permission(self, request, obj=None):
-        if is_being_request(request):
+        if is_character_request(request):
             return False
         return super().has_delete_permission(request, obj)
 
 
 #########################################
-# Being Admin                           #
+# Character Admin                       #
 #########################################
 
 class TabularRadioInput(widgets.Input):
@@ -160,9 +161,10 @@ class PersonaInlineForm(forms.ModelForm):
         super()._save_m2m()
         # seemed simpler to do this here rather than in save_related
         persona = self.instance
-        if persona.is_primary and persona.being.primary_persona != self:
-            persona.being.primary_persona = persona
-            persona.being.save(update_fields=['primary_persona'])
+        character = persona.character
+        if persona.is_primary and character.primary_persona != persona:
+            character.primary_persona = persona
+            character.save(update_fields=['primary_persona'])
 
 
 class PersonaInlineFormset(forms.BaseInlineFormSet):
@@ -197,29 +199,29 @@ class PersonaInline(admin.TabularInline):
     def get_queryset(self, request):
         return super().get_queryset(request) \
             .annotate(is_primary=Case(
-                When(pk=F('being__primary_persona__pk'), then=Value(True)),
+                When(pk=F('character__primary_persona__pk'), then=Value(True)),
                 default=Value(False),
                 output_field=models.BooleanField(),
             )) \
             .order_by('-is_primary', 'name')
 
 
-class BeingUrlInline(SortableInlineAdminMixin, admin.TabularInline):
+class CharacterUrlInline(SortableInlineAdminMixin, admin.TabularInline):
     classes = ['collapse']
-    model = BeingUrl
+    model = CharacterUrl
     extra = 0
 
 
-class BeingForm(forms.ModelForm):
+class CharacterForm(forms.ModelForm):
     primary_name = forms.CharField(
         label='Name',
-        help_text='Persona this being is primarily known as.',
+        help_text='Persona this character is primarily known as.',
         required=False,
         disabled=True,
     )
 
     class Meta:
-        model = Being
+        model = Character
         fields = (
             'primary_name',
             'bio',
@@ -231,17 +233,17 @@ class BeingForm(forms.ModelForm):
         self.initial['primary_name'] = str(self.instance)
 
 
-@admin.register(Being)
-class BeingAdmin(admin.ModelAdmin):
+@admin.register(Character)
+class CharacterAdmin(admin.ModelAdmin):
     list_display = ('name', aka, creators)
     search_fields = (
         'personas__name',
         'personas__creators__working_name',
         'personas__classification__name',
     )
-    form = BeingForm
+    form = CharacterForm
 
-    inlines = [BeingUrlInline, PersonaInline]
+    inlines = [CharacterUrlInline, PersonaInline]
     exclude = ('primary_persona',)
 
     # TODO: optimize list_display queries
@@ -259,10 +261,10 @@ class BeingAdmin(admin.ModelAdmin):
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
         # cross-populate creators
-        being = form.instance
-        orphans = being.personas.filter(creators=None)
+        character = form.instance
+        orphans = character.personas.filter(creators=None)
         if orphans:
-            default_creators = being.primary_persona.creators.all()
+            default_creators = character.primary_persona.creators.all()
             # things get non-deterministic if we reach beyond the primary persona
             if default_creators:
                 for o in orphans:
@@ -283,7 +285,7 @@ class PersonaForm(forms.ModelForm):
     class Meta:
         model = Persona
         fields = (
-            'being',
+            'character',
             'name',
             'type',
             'classification',
@@ -293,9 +295,9 @@ class PersonaForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # can add new Personas to Beings, but not reassign them
+        # can add new Personas to Characters, but not reassign them
         if self.instance.pk:
-            self.fields['being'].disabled = True
+            self.fields['character'].disabled = True
         # dunno if there is a better way to do this...
         self.initial['mugshot'] = self.instance.mugshot
 
@@ -311,12 +313,12 @@ class PersonaAdmin(admin.ModelAdmin):
     list_display = ('name', 'cls_name', aka, creators)
     search_fields = (
         'name',
-        'being__primary_persona__name',
+        'character__primary_persona__name',
         'classification__name',
         'creators__working_name',
     )
     form = PersonaForm
-    autocomplete_fields = ('being', 'creators')
+    autocomplete_fields = ('character', 'creators')
 
     def cls_name(self, obj):
         return obj.cls_name
@@ -325,26 +327,26 @@ class PersonaAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         # cannot delete primary personas
-        if is_being_request(request) or obj is not None and not obj.is_primary:
+        if is_character_request(request) or obj is not None and not obj.is_primary:
             return super().has_delete_permission(request, obj)
         return False
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         formfield = super().formfield_for_foreignkey(db_field, request, **kwargs)
-        if db_field.name == 'being':
+        if db_field.name == 'character':
             # TODO: this doesn't actually work because of code in AutocompleteMixin.build_attrs
             formfield.widget.attrs['data-placeholder'] = '(New)'
         return formfield
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):
-        new_being = None
-        if not hasattr(obj, 'being'):
-            new_being = obj.being = Being.objects.create()
+        new_character = None
+        if not hasattr(obj, 'character'):
+            new_character = obj.character = Character.objects.create()
         super().save_model(request, obj, form, change)
-        if new_being:
-            new_being.primary_persona = obj
-            new_being.save(update_fields=['primary_persona'])
+        if new_character:
+            new_character.primary_persona = obj
+            new_character.save(update_fields=['primary_persona'])
 
 
 #########################################

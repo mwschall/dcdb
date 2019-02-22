@@ -3,22 +3,22 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 
 from comics.models import Installment, Page
-from metadata.models import Being
+from metadata.models import Character
 
 
 @api_view(['GET'])
-def being_index(request):
-    beings = Being.objects.all()
+def character_index(request):
+    characters = Character.objects.all()
     # TODO: group by name/classification/other
     context = {
-        'beings': beings,
+        'characters': characters,
     }
-    return render(request, 'metadata/beings.html', context)
+    return render(request, 'metadata/characters.html', context)
 
 
 @api_view(['GET'])
-def being_page(request, being):
-    being = get_object_or_404(Being.objects, pk=being)
+def character_page(request, character):
+    character = get_object_or_404(Character.objects, pk=character)
     first_pages = Page.objects.filter(order=0)
     first_issues = Installment.objects \
         .prefetch_related(Prefetch('pages', queryset=first_pages)) \
@@ -43,14 +43,14 @@ def being_page(request, being):
                                         ON          ma1.installment_id = ci0.id
                                         INNER JOIN  metadata_persona mp0 
                                         ON          mp0.id = ma1.persona_id
-                                WHERE   mp0.being_id = %s))
+                                WHERE   mp0.character_id = %s))
         ORDER  	BY "comics_series"."name"
-        ''', [being.pk])
+        ''', [character.pk])
 
     context = {
-        'being': being,
-        'persona': being.primary_persona,
-        'aka': ', '.join(being.aka.values_list('name', flat=True)),
+        'character': character,
+        'persona': character.primary_persona,
+        'aka': ', '.join(character.aka.values_list('name', flat=True)),
         'first_issues': first_issues,
     }
-    return render(request, 'metadata/being.html', context)
+    return render(request, 'metadata/character.html', context)

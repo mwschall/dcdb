@@ -15,11 +15,13 @@ from django.utils.text import capfirst
 GIVEN_NAME = 'GN'
 SUPER_IDENTITY = 'SI'
 ALIAS = 'JJ'
+ALTERNATE_PERSONALITY = 'AP'
 PERSONA_TYPE_CHOICES = (
     # NOTE: multiple Given Names are allowed (see: Superman)
     (GIVEN_NAME, 'Given Name'),
     (SUPER_IDENTITY, 'Super Identity'),
     (ALIAS, 'Alias'),
+    (ALTERNATE_PERSONALITY, 'Alternate Personality'),
     # TODO: probably need a few more for good measure, but what?
 )
 
@@ -125,7 +127,7 @@ class Credit(models.Model):
 
 
 #########################################
-# Beings & Personas                     #
+# Characters & Personas                 #
 #########################################
 
 class Classification(models.Model):
@@ -145,7 +147,7 @@ class Classification(models.Model):
         self.name = ' '.join(self.name.split()).lower()
 
 
-class Being(models.Model):
+class Character(models.Model):
     primary_persona = models.OneToOneField(
         'Persona',
         related_name='primary_for',
@@ -153,7 +155,7 @@ class Being(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        help_text='What this being is primarily known as.',
+        help_text='What this character is primarily known as.',
     )
     bio = models.TextField(
         blank=True,
@@ -171,7 +173,7 @@ class Being(models.Model):
 
     @property
     def creators(self):
-        return Entity.objects.filter(persona__being=self).distinct()
+        return Entity.objects.filter(persona__character=self).distinct()
 
     @property
     def mugshot(self):
@@ -185,9 +187,9 @@ class Being(models.Model):
         return self.name
 
 
-class BeingUrl(models.Model):
-    being = models.ForeignKey(
-        'Being',
+class CharacterUrl(models.Model):
+    character = models.ForeignKey(
+        'Character',
         related_name='urls',
         on_delete=models.CASCADE,
     )
@@ -209,8 +211,8 @@ class PersonaDisplayManager(models.Manager):
 
 
 class Persona(models.Model):
-    being = models.ForeignKey(
-        'Being',
+    character = models.ForeignKey(
+        'Character',
         related_name='personas',
         on_delete=models.CASCADE,
         blank=True,
@@ -228,7 +230,7 @@ class Persona(models.Model):
     )
     classification = models.ForeignKey(
         'Classification',
-        related_name='characters',
+        related_name='personas',
         on_delete=models.PROTECT,
         default=1,
         help_text='Alter ego manner of being. (See: Shazam)',
@@ -242,7 +244,7 @@ class Persona(models.Model):
 
     creators = models.ManyToManyField(
         'Entity',
-        related_name='characters',
+        related_name='personas',
         related_query_name='persona',
         blank=True,
     )
@@ -250,15 +252,15 @@ class Persona(models.Model):
     appearances = models.ManyToManyField(
         'comics.Page',
         through='Appearance',
-        related_name='characters',
+        related_name='personas',
     )
 
     @property
     def is_primary(self):
         if not hasattr(self, '_is_primary'):
             try:
-                self._is_primary = self.being.primary_persona == self
-            except Being.DoesNotExist:
+                self._is_primary = self.character.primary_persona == self
+            except Character.DoesNotExist:
                 self.is_primary = False
         return self._is_primary
 
@@ -268,7 +270,7 @@ class Persona(models.Model):
 
     @property
     def aka(self):
-        return self.being.personas.exclude(pk=self.pk)
+        return self.character.personas.exclude(pk=self.pk)
 
     @property
     def cls_name(self):
@@ -310,7 +312,7 @@ class Persona(models.Model):
 
     class Meta:
         ordering = ['name']
-        unique_together = ('being', 'name')
+        unique_together = ('character', 'name')
         default_manager_name = 'display_objects'
 
     def __str__(self):

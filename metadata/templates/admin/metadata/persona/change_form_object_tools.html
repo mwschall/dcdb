@@ -2,10 +2,10 @@
 {% load i18n admin_urls %}
 
 {% block object-tools-items %}
-{% if original.being %}
+{% if original.character %}
 <li>
-    {% url 'admin:metadata_being_change' original.being.pk|admin_urlquote as change_url %}
-    <a href="{% add_preserved_filters change_url %}" class="changelink">{% trans "Edit Being" %}</a>
+    {% url 'admin:metadata_character_change' original.character.pk|admin_urlquote as change_url %}
+    <a href="{% add_preserved_filters change_url %}" class="changelink">{% trans "Edit Character" %}</a>
 </li>
 {% endif %}
 {{ block.super }}
