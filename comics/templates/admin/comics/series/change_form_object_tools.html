@@ -4,7 +4,7 @@
 {% block object-tools-items %}
 <li>
     {% url 'admin:comics_installment_add' as add_url %}
-    <a href="{% add_preserved_filters add_url %}" class="addlink">{% trans "Add Installment" %}</a>
+    <a href="{% add_preserved_filters add_url %}?series={{ object_id|admin_urlquote }}" class="addlink">{% trans "Add Installment" %}</a>
 </li>
 {{ block.super }}
 {% endblock %}

@@ -17,9 +17,11 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    url('', include('comics.urls', namespace='comics')),
+    url(r'^$', RedirectView.as_view(url='/comics/', permanent=False)),
+    url(r'^comics/', include('comics.urls', namespace='comics')),
     url('', include('metadata.urls', namespace='metadata')),
     url(r'^admin/', admin.site.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

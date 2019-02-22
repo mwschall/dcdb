@@ -35,7 +35,7 @@ def gen_base():
 
 def gen_page_links(page):
     installment_id = page.installment.id
-    page_idx = page.order
+    page_ord = page.order
     last_page = page.installment.num_pages - 1
 
     def page_link(page_num):
@@ -47,10 +47,10 @@ def gen_page_links(page):
         'thread_url': reverse('comics:installment', args=[installment_id]),
     }
 
-    if page_idx > 0:
-        data.update({'prev_url': page_link(page_idx-1)})
-    if page_idx < last_page:
-        data.update({'next_url': page_link(page_idx+1)})
+    if page_ord > 0:
+        data.update({'prev_url': page_link(page_ord-1)})
+    if page_ord < last_page:
+        data.update({'next_url': page_link(page_ord+1)})
 
     return data
 
@@ -85,8 +85,8 @@ def index(request):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
-def installment_detail(request, installment_id):
-    installment = get_object_or_404(Installment, pk=installment_id)
+def installment_detail(request, installment):
+    installment = get_object_or_404(Installment, pk=installment)
 
     if request.accepted_renderer.format == 'json':
         serializer = InstallmentSerializer(instance=installment)
@@ -106,13 +106,13 @@ def installment_detail(request, installment_id):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
-def installment_page(request, installment_id, page_idx='next'):
-    if page_idx is 'next':
-        installment = get_object_or_404(Installment, pk=installment_id)
+def installment_page(request, installment, page_ord='next'):
+    if page_ord is 'next':
+        installment = get_object_or_404(Installment, pk=installment)
         page = installment.pages.last()
         print(page.order)
     else:
-        page = get_object_or_404(Page, installment_id=installment_id, order=page_idx)
+        page = get_object_or_404(Page, installment=installment, order=page_ord)
         installment = page.installment
 
     serializer = PageSerializer(instance=page)
@@ -133,8 +133,8 @@ def installment_page(request, installment_id, page_idx='next'):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
-def series_detail(request, series_id):
-    series = get_object_or_404(Series, pk=series_id)
+def series_detail(request, series):
+    series = get_object_or_404(Series, pk=series)
 
     if request.accepted_renderer.format == 'json':
         serializer = SeriesSerializer(instance=series)
@@ -149,10 +149,10 @@ def series_detail(request, series_id):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
-def strip_page(request, series_id, page_idx):
-    series = get_object_or_404(Series, pk=series_id, is_strip=True)
+def strip_page(request, series, page_ord):
+    series = get_object_or_404(Series, pk=series, is_strip=True)
 
-    idx = int(page_idx)
+    idx = int(page_ord)
     ins = series.pages[idx]
 
     serializer = StripInstallmentSerializer(instance=ins)
@@ -162,7 +162,7 @@ def strip_page(request, series_id, page_idx):
         'page': serializer.data,
         'index': idx,
         'links': {
-            'thread': reverse('comics:strip', args=[series_id]),
+            'thread': reverse('comics:strip', args=[series]),
         },
         'thread': {
             'name': series.name,
@@ -174,8 +174,8 @@ def strip_page(request, series_id, page_idx):
 
 
 @api_view(['GET'])
-def thread_detail(request, thread_id):
-    thread = get_object_or_404(Thread, pk=thread_id)
+def thread_detail(request, thread):
+    thread = get_object_or_404(Thread, pk=thread)
     context = {
         'thread': thread,
         'pages': thread.pages,

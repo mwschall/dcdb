@@ -18,7 +18,7 @@ from django.utils import timezone
 from django.utils.text import Truncator, capfirst
 
 from comics.fields import ShortUUIDField
-from comics.util import s_uuid
+from comics.util import s_uuid, unpack_numeral
 from metadata.models import Credit
 
 #########################################
@@ -310,27 +310,34 @@ class Series(ThreadMixin, models.Model):
     @property
     def pages(self):
         if self.is_strip:
-            return self.installments.select_related('page').order_by('release_datetime')
-
-    def index_of(self, installment):
-        for index, item in enumerate(self.installments.values_list('pk', flat=True).order_by('release_datetime')):
-            if item == installment.id:
-                return index
-        return -1
+            return self.installments.select_related('page')
 
 
 class Installment(ImageFileMixin, ThreadMixin, models.Model):
+    # NOTE: changing these may require a DB migration
+    FIRST_NUMBER = 5
+    SECOND_NUMBER = 5
+
     series = models.ForeignKey(
         'Series',
         models.CASCADE,
         related_name='installments',
     )
-    number = models.CharField(
-        max_length=10,
+    ordinal = models.PositiveIntegerField(
+        default=0,
+        help_text='1-indexed default ordering within containing Series.',
+    )
+    number = models.DecimalField(
+        max_digits=FIRST_NUMBER + SECOND_NUMBER,
+        decimal_places=SECOND_NUMBER,
+        blank=True,
+        null=True,
+        help_text='Numeric designation, not including common label.',
     )
     title = models.CharField(
         max_length=200,
         blank=True,
+        help_text='In place of, or in addition to, a Number.'
     )
     synopsis = models.TextField(
         blank=True,
@@ -354,19 +361,25 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
     )
 
     class Meta:
-        unique_together = ('series', 'number')
-        ordering = ['series', 'number']
+        ordering = ['ordinal']
+        unique_together = ('series', 'number', 'title')
 
     def __str__(self):
         return self.name
 
     @property
+    def numeral(self):
+        if self.number:
+            return unpack_numeral(self.number, Installment.SECOND_NUMBER)
+        return None
+
+    @property
     def name(self):
         name = [self.series.name]
-        if self.number is not None:
+        if self.numeral is not None:
             label = self.label
             spacer = '' if re.search(r'\W$', label) else ' '
-            name += [' ', label, spacer, self.number]
+            name += [' ', label, spacer, self.numeral]
         if self.title:
             name += [' — ', self.title]
         return ''.join(name)
@@ -386,18 +399,16 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
 
     @property
     def slug(self):
-        # TODO: any way to check if number is sequential and zero-pad?
-        return "{}_{}".format(self.series.slug, self.number)
-
-    @property
-    def order(self):
-        return self.series.index_of(self)
+        # TODO: this is SUPER busted and needs to depend on stable values
+        return "{}_{}".format(self.series.slug, self.ordinal)
 
     @property
     def next_id(self):
-        idx = self.order + 1
         try:
-            return self.series.installments.values_list('pk', flat=True)[idx]
+            next_idx = self.ordinal  # 1-indexed, so yeah...
+            return self.series.installments \
+                .order_by('ordinal') \
+                .values_list('pk', flat=True)[next_idx]
         except IndexError:
             return None
 
@@ -501,6 +512,7 @@ class ThreadSequence(models.Model):
         'Installment',
         models.PROTECT,
     )
+    # TODO: make these ForeignKeys for a number of reasons
     begin_page = models.PositiveSmallIntegerField(
         default=0,
     )

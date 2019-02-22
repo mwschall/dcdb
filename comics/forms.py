@@ -1,10 +1,14 @@
 import json
+import re
+from decimal import Decimal
 from json import JSONDecodeError
 
-from django.forms import FileInput, ImageField
+from django.forms import FileInput, ImageField, RegexField
 from django.forms.widgets import FILE_INPUT_CONTRADICTION
+from django.utils.translation import gettext_lazy as _
 
 from comics.models import GenericImage
+from comics.util import unpack_numeral
 
 CROPPIE_VERSION = '2.6.3'
 # TODO: install and manage croppie via npm
@@ -73,3 +77,33 @@ class CroppieField(ImageField):
 
     def run_validators(self, value):
         super().run_validators(value and value.src)
+
+
+class NumeralField(RegexField):
+    # TODO: validate number of decimals in each part
+    default_regex = re.compile(r'^(\d+)(?:\s*[-\.]\s*(\d+)?)?$')
+    default_error_messages = {
+        'invalid': _('A value like 7 or 7-11 or 7.11 is expected.'),
+    }
+
+    def __init__(self, *, first_length, second_length, **kwargs):
+        self.max_digits = first_length + second_length
+        self.decimal_places = second_length
+        kwargs['strip'] = True
+        kwargs['empty_value'] = None
+        super().__init__(self.default_regex, **kwargs)
+
+    def prepare_value(self, value):
+        s = unpack_numeral(value, self.decimal_places)
+        return s if s is not None else value
+
+    def to_python(self, data):
+        value = super().to_python(data)
+        try:
+            m = re.match(self.regex, value)
+            a = Decimal(m.group(1))
+            b = Decimal(m.group(2) or 0) / pow(10, self.decimal_places)
+            return a + b
+        except (AttributeError, TypeError):
+            return value
+

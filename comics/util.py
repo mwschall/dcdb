@@ -1,4 +1,6 @@
+import math
 import re
+from decimal import Decimal, InvalidOperation
 
 import shortuuid
 from django.contrib.contenttypes.models import ContentType
@@ -9,6 +11,16 @@ DEFAULT_SHORTUUID = shortuuid.ShortUUID(alphabet=DEFAULT_UUID_ALPHABET)
 
 def s_uuid(length=22):
     return DEFAULT_SHORTUUID.uuid()[:length]
+
+
+def unpack_numeral(value, decimal_places, spacer='.'):
+    try:
+        value = Decimal(value)
+        a = int(math.floor(value))
+        b = int(math.floor((value - a) * pow(10, decimal_places)))
+        return '{}{}{}'.format(a, spacer, b) if b else str(a)
+    except (InvalidOperation, TypeError):
+        return None
 
 
 def is_model_request(request, model):
