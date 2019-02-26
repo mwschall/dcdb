@@ -1,13 +1,25 @@
 {% extends 'comics/_standard.html' %}
 
+{% load static %}
 {% load comics_extras %}
 
 {% block content %}
+  <h3>{{ installment }}</h3>
   <div class="flow_grid">
   {% for type, credit in credits %}
     <span class="flow_cell credit_cell">{{ type }}: {{ credit }}</span>
   {% endfor %}
   </div>
+  {% if appearances %}
+  <div class="flow_grid">
+    <p class="flow_cell appearances">Featuring:
+      {% for persona in appearances %}
+        {% if not forloop.first %}, {% endif %}
+        {% include 'metadata/_snippet-char-app.html' with persona=persona %}
+      {% endfor %}
+    </p>
+  </div>
+  {% endif %}
   <div class="flow_grid">
   {% for page in pages %}
     <a class="flow_cell page_cell" href="{% url 'comics:page' installment.id page.order %}">

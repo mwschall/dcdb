@@ -1,6 +1,8 @@
 from itertools import groupby
+from operator import attrgetter
 
 import inflect
+from django.db.models import Count, Case, When, OuterRef, Exists, Prefetch
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import ugettext as _, ungettext
@@ -9,7 +11,8 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 
 from comics.serializers import PageSerializer, InstallmentSerializer, SeriesSerializer, StripInstallmentSerializer
-from .models import Installment, Page, Thread, Series
+from metadata.models import Persona, Character, MUGSHOT
+from .models import Installment, Page, Thread, Series, GenericImage
 
 p = inflect.engine()
 
@@ -92,16 +95,44 @@ def installment_detail(request, installment):
             'links': gen_thread_links(installment),
         }
         return Response(context)
-    else:
-        credit_list = installment.credits \
-            .select_related('role', 'entity') \
-            .all()
-        context = {
-            'installment': installment,
-            'credits': fmt_credit_list(credit_list),
-            'pages': installment.pages.all,
-        }
-        return Response(context, template_name='comics/installment.html')
+
+    credit_list = installment.credits \
+        .select_related('role', 'entity') \
+        .all()
+
+    # Notes:
+    # - list each Character once
+    # - use primary_persona if featured, else go by page count
+    # - final sorting by total appearances, but by name might be better
+    personas = Persona.objects \
+        .order_by() \
+        .filter(appearances__installment=installment,
+                appearances__is_spoiler=False) \
+        .annotate(app_count=Count(Case(When(appearances__installment=installment, then='pk'))),
+                  is_primary=Exists(Character.objects.filter(primary_persona=OuterRef('pk')))) \
+        .prefetch_related(Prefetch('images',  # TODO: recheck that this works once there are profile pics
+                                   queryset=GenericImage.objects.filter(personaimage__type=MUGSHOT))) \
+        .order_by('character', '-is_primary', '-app_count', 'name')
+
+    def get_char(g):
+        # star = next(g)
+        # star.also_as = [q.name for q in g]
+        pl = list(g)
+        star = pl[0]
+        star.also_as = pl[1:]
+        star.app_total = sum([pa.app_count for pa in pl])
+        return star
+
+    appearances = sorted([get_char(g) for _, g in groupby(personas, lambda m: m.character)],
+                         key=attrgetter('app_total'), reverse=True)
+
+    context = {
+        'installment': installment,
+        'credits': fmt_credit_list(credit_list),
+        'pages': installment.pages.all(),
+        'appearances': appearances,
+    }
+    return Response(context, template_name='comics/installment.html')
 
 
 @api_view(['GET'])

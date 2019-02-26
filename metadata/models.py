@@ -265,7 +265,12 @@ class Persona(models.Model):
         blank=True,
     )
 
-    appearances = models.ManyToManyField(
+    installments = models.ManyToManyField(
+        'comics.Installment',
+        through='Appearance',
+        related_name='personas',
+    )
+    pages = models.ManyToManyField(
         'comics.Page',
         through='Appearance',
         related_name='personas',
@@ -367,6 +372,7 @@ class Appearance(models.Model):
         'Persona',
         # TODO: PROTECT may be better, but using CASCADE during initial development
         on_delete=models.CASCADE,
+        related_name='appearances',
     )
     installment = models.ForeignKey(
         'comics.Installment',

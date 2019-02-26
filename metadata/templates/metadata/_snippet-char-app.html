@@ -1,0 +1,4 @@
+<a class="appearance" href="{% url 'metadata:character' persona.character_id %}">
+  <img src="{{ persona.mugshot.image_url }}" alt="Mugshot for {{ persona.name }}">
+  {{ persona.name }}{% if persona.also_as %} ({{ persona.also_as|join:" / " }}){% endif %}
+</a>

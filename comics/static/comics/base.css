@@ -87,3 +87,23 @@
   top: 0.5rem;
   right: 1rem;
 }
+
+.appearances {
+  text-align: center;
+}
+.appearance {
+  white-space: nowrap;
+}
+.appearance img {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  vertical-align: text-top;
+}
+.appearance:hover img {
+  width: 3rem;
+  height: 3rem;
+  margin: -1.01rem;
+  vertical-align: middle;
+  border-radius: 50%;
+}
