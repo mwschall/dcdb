@@ -12,17 +12,18 @@ from django.utils.text import capfirst
 
 GIVEN_NAME = 'GN'
 SUPER_IDENTITY = 'SI'
-ALTERNATE_PERSONALITY = 'AP'
+PERSONALITY = 'AP'
+TITLE = 'TL'
 ALIAS = 'JJ'
 ROLE = 'RP'
 PERSONA_TYPE_CHOICES = (
     # NOTE: multiple Given Names are allowed (see: Superman)
     (GIVEN_NAME, 'Given Name'),
     (SUPER_IDENTITY, 'Super Identity'),
-    (ALTERNATE_PERSONALITY, 'Alternate Personality'),
+    (PERSONALITY, 'Personality'),
+    (TITLE, 'Title'),
     (ALIAS, 'Alias'),
     (ROLE, 'Role')
-    # TODO: probably need a few more for good measure, but what?
 )
 
 PROFILE = 'P'
@@ -32,6 +33,7 @@ PERSONA_IMAGE_TYPE_CHOICES = (
     (MUGSHOT, 'Mugshot'),
 )
 
+# NOTE: these feel comprehensive, but there might be one more
 NORMAL = 'N'
 OFF_SCREEN = 'O'
 MENTIONED = 'M'

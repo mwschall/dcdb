@@ -99,7 +99,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('name', models.CharField(help_text='Full name, without any additional designation.', max_length=200)),
-                ('type', models.CharField(choices=[('GN', 'Given Name'), ('SI', 'Super Identity'), ('AP', 'Alternate Personality'), ('JJ', 'Alias'), ('RP', 'Role')], default='GN', help_text='Alter ego type or purpose.', max_length=2)),
+                ('type', models.CharField(choices=[('GN', 'Given Name'), ('SI', 'Super Identity'), ('AP', 'Personality'), ('TL', 'Title'), ('JJ', 'Alias'), ('RP', 'Role')], default='GN', help_text='Alter ego type or purpose.', max_length=2)),
                 ('appearances', models.ManyToManyField(related_name='personas', through='metadata.Appearance', to='comics.Page')),
                 ('character', models.ForeignKey(blank=True, help_text='Singular underlying entity.', on_delete=django.db.models.deletion.CASCADE, related_name='personas', to='metadata.Character')),
                 ('classification', models.ForeignKey(default=1, help_text='Alter ego manner of being. (See: Shazam)', on_delete=django.db.models.deletion.PROTECT, related_name='personas', to='metadata.Classification')),

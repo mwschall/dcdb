@@ -349,6 +349,7 @@ class AppearanceInlineForm(forms.ModelForm):
             'begin_ord',
             'end_ord',
             'type',
+            'is_spoiler',
         )
 
     def __init__(self, *args, **kwargs):
@@ -461,7 +462,8 @@ class AppearanceInlineFormset(forms.BaseInlineFormSet):
             appearances += [Appearance(persona=data['persona'],
                                        installment=data['installment'],
                                        page_id=page_ids[o],
-                                       type=data['type'])
+                                       type=data['type'],
+                                       is_spoiler=data['is_spoiler'])
                             for o in range(data['begin_ord'], data['end_ord'] + 1)]
 
         # updating is too complicated, so frag everything and do-over fresh
@@ -484,6 +486,7 @@ class AppearancesInline(admin.TabularInline):
     begin_ord = models.PositiveSmallIntegerField()
     end_ord = models.PositiveSmallIntegerField()
 
+    classes = ['collapse']
     model = Appearance
     form = AppearanceInlineForm
     formset = AppearanceInlineFormset

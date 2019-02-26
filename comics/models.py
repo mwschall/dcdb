@@ -297,7 +297,7 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
 
     series = models.ForeignKey(
         'Series',
-        models.CASCADE,
+        on_delete=models.CASCADE,
         related_name='installments',
     )
     ordinal = models.PositiveIntegerField(
@@ -327,7 +327,7 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
     )
     page = models.OneToOneField(
         'Page',
-        models.SET_NULL,
+        on_delete=models.SET_NULL,
         related_name='strip',
         null=True,
         editable=False,
@@ -377,6 +377,7 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
 
     @property
     def next_id(self):
+        # TODO: this should be possible with a LEAD() window function
         try:
             next_idx = self.ordinal  # 1-indexed, so yeah...
             return self.series.installments \
@@ -403,7 +404,7 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
 class Page(SourceImage):
     installment = models.ForeignKey(
         'Installment',
-        models.CASCADE,
+        on_delete=models.CASCADE,
         related_name='pages',
     )
     order = models.PositiveSmallIntegerField(
@@ -472,14 +473,14 @@ class Thread(models.Model):
 class ThreadSequence(models.Model):
     thread = models.ForeignKey(
         'Thread',
-        models.CASCADE,
+        on_delete=models.CASCADE,
     )
     order = models.PositiveSmallIntegerField(
         default=0,
     )
     installment = models.ForeignKey(
         'Installment',
-        models.PROTECT,
+        on_delete=models.PROTECT,
     )
     # TODO: make these ForeignKeys for a number of reasons
     begin_page = models.PositiveSmallIntegerField(
