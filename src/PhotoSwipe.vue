@@ -13,8 +13,13 @@ div.pswp(tabindex='-1', role='dialog', ariaHidden='true')
         button.pswp__button.pswp__button--zoom(title='Zoom in/out')
         div.pswp__info(v-touch:tap='toggleTitle')
           div.pswp__title {{ title }}
-          div.pswp__synopsis(v-if='synopsis' v-show='showSynopsis')
-            p {{ synopsis }}
+          div.pswp__synopsis(v-if='info' v-show='showInfo')
+            div(v-if='featuring')
+              h4 On This Page
+              div(v-html='featuring')
+            div(v-if='synopsis')
+              h4 Synopsis
+              p {{ synopsis }}
         div.pswp__preloader
           div.pswp__preloader__icn
             div.pswp__preloader__cut
@@ -26,6 +31,7 @@ div.pswp(tabindex='-1', role='dialog', ariaHidden='true')
 </template>
 
 <script>
+import _ from 'lodash'
 import PhotoSwipe from 'photoswipe'
 import PhotoSwipeUIDefault from 'photoswipe/dist/photoswipe-ui-default'
 
@@ -73,7 +79,7 @@ export default {
   data () {
     return {
       gallery: undefined,
-      showSynopsis: false,
+      showInfo: false,
     }
   },
   computed: {
@@ -82,6 +88,20 @@ export default {
     },
     synopsis () {
       return this.items[this.index].synopsis || this.thread.synopsis
+    },
+    featuring () {
+      const types = _.groupBy(this.items[this.index].appearances, 'type')
+      const html = []
+      if (types.S) {
+        html.push(`Visible: ${types.S.map(a => a.persona.name).join(', ')}`)
+      }
+      if (types.O || types.M) {
+        html.push(`Other: ${_.filter(_.concat(types.O, types.M)).map(a => a.persona.name).join(', ')}`)
+      }
+      return html.join('<br>')
+    },
+    info () {
+      return this.synopsis || this.featuring
     },
   },
   mounted () {
@@ -112,8 +132,8 @@ export default {
   },
   methods: {
     toggleTitle () {
-      if (this.synopsis) {
-        this.showSynopsis = !this.showSynopsis
+      if (this.info) {
+        this.showInfo = !this.showInfo
       }
     },
     init () {

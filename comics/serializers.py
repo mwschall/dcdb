@@ -2,16 +2,18 @@ from rest_framework import serializers
 from rest_framework.fields import CharField
 
 from comics.models import Page, Installment, Series
-
+from metadata.serializers import PageAppearanceSerializer
 
 PAGE_FIELDS = ('image_url', 'image_width', 'image_height',)
 THREAD_FIELDS = ('name', 'num_pages', 'pages',)
 
 
 class PageSerializer(serializers.ModelSerializer):
+    appearances = PageAppearanceSerializer(many=True, read_only=True)
+
     class Meta:
         model = Page
-        fields = PAGE_FIELDS
+        fields = PAGE_FIELDS + ('appearances',)
 
 
 class InstallmentSerializer(serializers.ModelSerializer):

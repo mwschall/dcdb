@@ -34,11 +34,11 @@ PERSONA_IMAGE_TYPE_CHOICES = (
 )
 
 # NOTE: these feel comprehensive, but there might be one more
-NORMAL = 'N'
+STANDARD = 'S'
 OFF_SCREEN = 'O'
 MENTIONED = 'M'
 APPEARANCE_TYPE_CHOICES = (
-    (NORMAL, 'Normal'),
+    (STANDARD, 'Standard'),
     (OFF_SCREEN, 'Off Screen'),
     (MENTIONED, 'Mentioned'),
 )
@@ -382,11 +382,12 @@ class Appearance(models.Model):
     page = models.ForeignKey(
         'comics.Page',
         on_delete=models.CASCADE,
+        related_name='appearances',
     )
     type = models.CharField(
         max_length=1,
         choices=APPEARANCE_TYPE_CHOICES,
-        default=NORMAL,
+        default=STANDARD,
         help_text='Whether visible on the page, or otherwise present.',
     )
     is_spoiler = models.BooleanField(
