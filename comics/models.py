@@ -6,11 +6,10 @@ from pathlib import Path
 
 import shortuuid
 from PIL import Image
-from django.core.files.storage import default_storage
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db.models import Q
-from django.db.models.signals import post_delete, pre_save
+from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.text import Truncator, capfirst
@@ -69,30 +68,6 @@ def gen_src_loc(instance, filename):
             shortuuid.uuid(),
             ext,
         )
-
-
-# https://timonweb.com/posts/cleanup-files-and-images-on-model-delete-in-django/
-# noinspection PyBroadException, PyProtectedMember, PyUnusedLocal
-def file_cleanup(sender, instance, **kwargs):
-    """
-    File cleanup callback used to emulate the old delete
-    behavior using signals. Initially django deleted linked
-    files when an object containing a File/ImageField was deleted.
-
-    Usage:
-    >>> from django.db.models.signals import post_delete
-    >>> post_delete.connect(file_cleanup, sender=SourceImage, dispatch_uid="sourceimage.file_cleanup")
-    """
-    for field in sender._meta.get_fields():
-        if field and isinstance(field, models.FileField):
-            f = getattr(instance, field.name)
-            m = instance.__class__._default_manager
-            if hasattr(f, 'path') and os.path.exists(f.path) and \
-                    not m.filter(**{'%s__exact' % field.name: f}).exclude(pk=instance.pk):
-                try:
-                    default_storage.delete(f.path)
-                except Exception:
-                    pass
 
 
 #########################################
@@ -193,9 +168,6 @@ def scaled_img_pre_save_handler(sender, instance, **kwargs):
     instance.scaled = InMemoryUploadedFile(buf, None, 'crop.png', 'image/png', buf.tell(), None)
 
 
-post_delete.connect(file_cleanup, sender=GenericImage, dispatch_uid="comics.GenericImage.file_cleanup")
-
-
 class SourceImage(ImageFileMixin, models.Model):
     file = models.ImageField(
         upload_to=gen_src_loc,
@@ -213,9 +185,6 @@ class SourceImage(ImageFileMixin, models.Model):
     @property
     def safe_file(self):
         return self.file
-
-
-post_delete.connect(file_cleanup, sender=SourceImage, dispatch_uid="comics.SourceImage.file_cleanup")
 
 
 #########################################

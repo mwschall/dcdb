@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 django = ">=2.1"
 django-admin-sortable2 = "*"
+django-cleanup = "*"
 django-debug-toolbar = "*"
 django-webpack-loader = "*"
 djangorestframework = "*"
