@@ -32,7 +32,7 @@ class MicroModal(Widget):
 
 
 class CroppieInput(MicroModal, FileInput):
-    template_name = 'comics/forms/widgets/croppie.html'
+    template_name = 'admin/widgets/croppie.html'
 
     class Media:
         css = {

@@ -1,8 +1,8 @@
-{% extends 'comics/_base.html' %}
+{% extends 'comics/_tmpl-base.html' %}
 
 {% block skeletoncontent %}
 <div class="page-header">
-  <h1><a href="{% url 'comics:index' %}">Digital Comic DB</a></h1>
+  <h1><a href="{{ url('comics:index') }}">Digital Comic DB</a></h1>
 </div>
 
 <div class="content container">

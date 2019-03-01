@@ -1,19 +1,13 @@
-{% extends 'comics/_base.html' %}
-
-{% load static %}
-{% load comics_extras %}
-{% load render_bundle from webpack_loader %}
+{% extends 'comics/_tmpl-base.html' %}
 
 {% block skeletoncss %}
   {% if not debug %}
-    {% render_bundle 'app' 'css' %}
+    {{ render_bundle('app', 'css') }}
   {% endif %}
 {% endblock %}
 
 {% block skeletonprecontent %}
-<script>
-  window.__INITIAL_STATE__ = {{ initial_state|json }};
-</script>
+{{ initial_state|json_script("__INITIAL_STATE__") }}
 {% endblock %}
 
 {% block skeletoncontent %}
@@ -26,8 +20,8 @@
           <div class="pswp__zoom-wrap">
             <img class="pswp__img"
                  src="{{ initial_state.page.image_url }}"
-                 width="{{ initial_sate.page.image_width }}"
-                 height="{{ initial_sate.page.image_height }}"
+                 width="{{ initial_state.page.image_width }}"
+                 height="{{ initial_state.page.image_height }}"
             />
           </div>
         </div>
@@ -46,6 +40,6 @@
 {% endblock %}
 
 {% block skeletonpostcontent %}
-  {% render_bundle 'vendor' 'js' %}
-  {% render_bundle 'app' 'js' %}
+  {{ render_bundle('vendor', 'js') }}
+  {{ render_bundle('app', 'js') }}
 {% endblock %}

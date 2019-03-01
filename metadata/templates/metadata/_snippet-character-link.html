@@ -1,9 +1,0 @@
-{% load imagekit %}
-
-<a class="appearance" href="{% url 'metadata:character' persona.character_id %}">
-  {% if persona.mugshot %}
-  {% thumbnail '50x50' persona.mugshot as thumb %}
-  <img src="{{ thumb.url }}" alt="Mugshot for {{ persona }}">
-  {% endif %}
-  {{ persona }}{% if persona.also_as %} ({{ persona.also_as|join:" / " }}){% endif %}
-</a>

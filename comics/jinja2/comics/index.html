@@ -1,10 +1,10 @@
-{% extends 'comics/_standard.html' %}
+{% extends 'comics/_tmpl-standard.html' %}
 
 {% block content %}
   <h2>Threads</h2>
   <div class="flow_row">
   {% for thread in threads %}
-    <a class="flow_cell issue_cell no_cover" href="{% url 'comics:thread' thread.id %}">
+    <a class="flow_cell issue_cell no_cover" href="{{ url('comics:thread', args=[thread.id]) }}">
       <h3 class="title">{{ thread }}</h3>
     </a>
   {% endfor %}
@@ -12,7 +12,7 @@
   <h2>Strips</h2>
   <div class="flow_row">
   {% for strip in strips %}
-    <a class="flow_cell issue_cell no_cover" href="{% url 'comics:strip_page' strip.id 0 %}">
+    <a class="flow_cell issue_cell no_cover" href="{{ url('comics:strip_page', args=[strip.id, 0]) }}">
       <h3 class="title">{{ strip.name }}</h3>
     </a>
   {% endfor %}
@@ -21,11 +21,11 @@
   <div class="flow_row">
   {% for installment in installments %}
     {% if installment.has_cover %}
-      <a class="flow_cell issue_cell" href="{% url 'comics:installment' installment.id %}">
+      <a class="flow_cell issue_cell" href="{{ url('comics:installment', args=[installment.id]) }}">
         <img class="issue_cover" src="{{ installment.cover.image_url }}" />
       </a>
     {% else %}
-      <a class="flow_cell issue_cell no_cover" href="{% url 'comics:installment' installment.id %}">
+      <a class="flow_cell issue_cell no_cover" href="{{ url('comics:installment', args=[installment.id]) }}">
         <h3 class="title">{{ installment }}</h3>
       </a>
     {% endif %}

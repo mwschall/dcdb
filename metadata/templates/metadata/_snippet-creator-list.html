@@ -1,4 +1,0 @@
-{% for entity in entities %}
-  {% if not forloop.first %}, {% endif %}
-  {% include 'metadata/_snippet-creator-link.html' with entity=entity %}
-{% endfor %}

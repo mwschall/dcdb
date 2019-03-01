@@ -23,11 +23,11 @@
   <div class="flow_grid">
   {% for issue in first_issues %}
     {% if issue.has_cover %}
-      <a class="flow_cell issue_cell" href="{% url 'comics:series' issue.series_id %}">
+      <a class="flow_cell issue_cell" href="{{ url('comics:series', args=[issue.series_id]) }}">
         <img class="issue_cover" src="{{ issue.cover.image_url }}">
       </a>
     {% else %}
-      <a class="flow_cell issue_cell no_cover" href="{% url 'comics:series' issue.series_id %}">
+      <a class="flow_cell issue_cell no_cover" href="{{ url('comics:series', args=[issue.series_id]) }}">
         <h3 class="title">{{ issue.series_name }}</h3>
       </a>
     {% endif %}

@@ -69,6 +69,17 @@ ROOT_URLCONF = 'dcdb.urls'
 
 TEMPLATES = [
     {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'DIRS': [],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'environment': 'dcdb.jinja2.environment',
+            'keep_trailing_newline': True,
+            'lstrip_blocks': True,
+            'trim_blocks': True,
+        },
+    },
+    {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
         'APP_DIRS': True,

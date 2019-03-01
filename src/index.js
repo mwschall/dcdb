@@ -12,7 +12,8 @@ Vue.use(Vue2TouchEvents, {
   tapTolerance: 0,
 })
 
-const INITIAL_STATE = window.__INITIAL_STATE__ || {}
+const jsonNode = document.querySelector('#__INITIAL_STATE__')
+const INITIAL_STATE = JSON.parse(jsonNode.textContent || '{}')
 
 const routes = [
   { path: '/installment/:installment/page/:page', component: Viewer, name: 'installment:page' },

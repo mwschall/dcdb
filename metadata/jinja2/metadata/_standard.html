@@ -1,0 +1,6 @@
+{% extends 'comics/_tmpl-standard.html' %}
+
+{% block skeletoncss %}
+{{ super() }}
+<link rel="stylesheet" href="{{ static('metadata/identity.css') }}">
+{% endblock %}

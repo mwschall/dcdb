@@ -1,0 +1,6 @@
+Featuring:
+{% for persona in appearances %}
+  {% include 'metadata/_snippet-character-link.html' %}
+  {%- if not loop.last %},
+  {% endif %}
+{% endfor %}

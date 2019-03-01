@@ -4,11 +4,11 @@
   <div>
   {% for character in characters %}
     {% if character.mugshot.image_url %}
-    <a class="mug" href="{% url 'metadata:character' character.id %}" title="{{ character.name }}">
+    <a class="mug" href="{{ url('metadata:character', args=[character.id]) }}" title="{{ character.name }}">
       <img src="{{ character.mugshot.image_url }}" alt="{{ character.name }}">
     </a>
     {% else %}
-    <a class="mug no_img" href="{% url 'metadata:character' character.id %}" title="{{ character.name }}">
+    <a class="mug no_img" href="{{ url('metadata:character', args=[character.id]) }}" title="{{ character.name }}">
       <span class="name">{{ character.name }}</span>
    </a>
     {% endif %}
