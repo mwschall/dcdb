@@ -192,6 +192,7 @@ class PersonaInline(admin.TabularInline):
     )
     autocomplete_fields = ('creators',)
     show_change_link = True
+    view_on_site = False
 
     def get_formset(self, request, obj=None, **kwargs):
         return super().get_formset(request, obj=obj, validate_min=True, **kwargs)

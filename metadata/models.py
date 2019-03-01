@@ -2,6 +2,7 @@ from urllib.parse import urlparse
 
 from django.db import models
 from django.db.models import F
+from django.urls import reverse
 from django.utils.text import capfirst
 
 #########################################
@@ -197,6 +198,9 @@ class Character(models.Model):
     def __str__(self):
         return self.name
 
+    def get_absolute_url(self):
+        return reverse('metadata:character', args=[self.pk])
+
 
 class CharacterUrl(models.Model):
     character = models.ForeignKey(
@@ -314,6 +318,9 @@ class Persona(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('metadata:character', args=[self.character_id])
 
     def clean(self):
         # NOTE: Minimal cleaning is desirable and proper. Or is it?

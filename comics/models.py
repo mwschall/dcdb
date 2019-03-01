@@ -11,6 +11,7 @@ from django.db import models
 from django.db.models import Q
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import Truncator, capfirst
 
@@ -253,6 +254,11 @@ class Series(ThreadMixin, models.Model):
     def __str__(self):
         return "{} [{}]".format(self.name, self.slug)
 
+    def get_absolute_url(self):
+        if self.is_strip:
+            return reverse('comics:strip', args=[self.pk])
+        return reverse('comics:series', args=[self.pk])
+
     @property
     def pages(self):
         if self.is_strip:
@@ -308,6 +314,9 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_absolute_url(self):
+        return reverse('comics:installment', args=[self.pk])
 
     @property
     def numeral(self):
@@ -389,6 +398,9 @@ class Page(SourceImage):
     def __str__(self):
         return "{}".format(self.order)
 
+    def get_absolute_url(self):
+        return reverse('comics:page', args=[self.installment_id, self.order])
+
     @property
     def is_cover(self):
         return self.order is 0 and self.installment.has_cover
@@ -426,6 +438,9 @@ class Thread(models.Model):
     def __str__(self):
         trunc = Truncator(self.name)
         return trunc.words(4)
+
+    def get_absolute_url(self):
+        return reverse('comics:thread', args=[self.pk])
 
     @property
     def cover(self):
