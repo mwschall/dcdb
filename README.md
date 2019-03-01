@@ -38,6 +38,6 @@ For detailed explanation on how things work, consult the [docs for vue-loader](h
 
 ## License
 
-[MIT](http://opensource.org/licenses/MIT)
+[ISC](LICENSE)
 
-Copyright (c) 2016 Matthew Schallberger
+Copyright (c) 2019 Matthew Schallberger
