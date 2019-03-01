@@ -1,0 +1,9 @@
+{% load imagekit %}
+
+<a class="creator">
+  {% if entity.avatar %}
+  {% thumbnail '50x50' entity.avatar as thumb %}
+  <img src="{{ thumb.url }}" alt="Avatar of {{ entity }}">
+  {% endif %}
+  {{ entity }}
+</a>

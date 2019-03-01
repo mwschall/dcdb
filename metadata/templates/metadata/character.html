@@ -3,7 +3,15 @@
 {% block content %}
 <article class="character">
 <section class="profile">
-  <div class="picture"><img src="{{ persona.mugshot.image_url }}" alt="{{ persona.name }}"></div>
+  {% if persona.profile_pic or persona.mugshot %}
+  <div class="picture">
+    {% if persona.profile_pic %}
+    <img src="{{ persona.profile_pic.url }}" alt="Picture of {{ persona.name }}" width="300">
+    {% else %}
+     <img src="{{ persona.mugshot.url }}" alt="Picture of {{ persona.name }}" width="200">
+   {% endif %}
+  </div>
+  {% endif %}
   <div class="info">
     <div class="name">{{ persona.name }}</div>
     <div class="aka">{{ aka }}</div>

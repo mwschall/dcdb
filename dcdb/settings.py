@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'adminsortable2',
     'django_cleanup',
+    'imagekit',
     'rest_framework',
     'webpack_loader',
 ]

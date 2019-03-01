@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "0243bd2751497e12ccbb834af448f22c7a9826f6a803890d1f5f387bd077f772"
+            "sha256": "dcee4dafa85386f5ac4a11282358c23e64c7ae17275f5b4f11d5fe15d62d5ca9"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -29,6 +29,13 @@
             "index": "pypi",
             "version": "==0.7"
         },
+        "django-appconf": {
+            "hashes": [
+                "sha256:6a4d9aea683b4c224d97ab8ee11ad2d29a37072c0c6c509896dd9857466fb261",
+                "sha256:ddab987d14b26731352c01ee69c090a4ebfc9141ed223bef039d79587f22acd9"
+            ],
+            "version": "==1.0.2"
+        },
         "django-cleanup": {
             "hashes": [
                 "sha256:3e7512b11cb5231e9784bd18f66f53bf56521fed539897be1bb318628e2539fd",
@@ -44,6 +51,14 @@
             ],
             "index": "pypi",
             "version": "==1.11"
+        },
+        "django-imagekit": {
+            "hashes": [
+                "sha256:304c3379f6a5cac387e47ace11195a603ad3cb01e3e951b45489824d25b00359",
+                "sha256:6ec0afb77cdf52cd453c9fc2c10ef350d111edfd6ce53c5977aa8a0e22cee00c"
+            ],
+            "index": "pypi",
+            "version": "==4.0.2"
         },
         "django-webpack-loader": {
             "hashes": [
@@ -68,6 +83,12 @@
             ],
             "index": "pypi",
             "version": "==2.1.0"
+        },
+        "pilkit": {
+            "hashes": [
+                "sha256:ddb30c2f0198a147e56b151476c3bb9fe045fbfd5b0a0fa2a3148dba62d1559f"
+            ],
+            "version": "==2.0"
         },
         "pillow": {
             "hashes": [
@@ -118,6 +139,13 @@
             ],
             "index": "pypi",
             "version": "==0.5.0"
+        },
+        "six": {
+            "hashes": [
+                "sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c",
+                "sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+            ],
+            "version": "==1.12.0"
         },
         "sqlparse": {
             "hashes": [

@@ -2,7 +2,7 @@ from itertools import groupby
 from operator import attrgetter
 
 import inflect
-from django.db.models import Count, Case, When, OuterRef, Exists, Prefetch
+from django.db.models import Count, Case, When, OuterRef, Exists
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import ugettext as _, ungettext
@@ -11,8 +11,8 @@ from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 
 from comics.serializers import PageSerializer, InstallmentSerializer, SeriesSerializer, StripInstallmentSerializer
-from metadata.models import Persona, Character, MUGSHOT
-from .models import Installment, Page, Thread, Series, GenericImage
+from metadata.models import Persona, Character
+from .models import Installment, Page, Thread, Series
 
 p = inflect.engine()
 
@@ -23,10 +23,10 @@ def fmt_credit_list(credit_list):
         return [(_("by"), credit_list[0].entity)]
     else:
         raw = [
-            (str(r), tuple(map(lambda c: str(c.entity), cl)))
+            (str(r), tuple(map(lambda c: c.entity, cl)))
             for r, cl in groupby(credit_list, lambda c: c.role)
         ]
-        return [(ungettext(r, p.plural(r), len(el)), ', '.join(el)) for r, el in raw]
+        return [(ungettext(r, p.plural(r), len(el)), el) for r, el in raw]
 
 
 def gen_base():
@@ -110,8 +110,6 @@ def installment_detail(request, installment):
                 appearances__is_spoiler=False) \
         .annotate(app_count=Count(Case(When(appearances__installment=installment, then='pk'))),
                   is_primary=Exists(Character.objects.filter(primary_persona=OuterRef('pk')))) \
-        .prefetch_related(Prefetch('images',  # TODO: recheck that this works once there are profile pics
-                                   queryset=GenericImage.objects.filter(personaimage__type=MUGSHOT))) \
         .order_by('character', '-is_primary', '-app_count', 'name')
 
     def get_char(g):

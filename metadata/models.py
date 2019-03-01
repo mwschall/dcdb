@@ -1,9 +1,7 @@
 from urllib.parse import urlparse
 
-from django.db import models, transaction
+from django.db import models
 from django.db.models import F
-from django.db.models.signals import pre_delete
-from django.dispatch import receiver
 from django.utils.text import capfirst
 
 #########################################
@@ -24,13 +22,6 @@ PERSONA_TYPE_CHOICES = (
     (TITLE, 'Title'),
     (ALIAS, 'Alias'),
     (ROLE, 'Role')
-)
-
-PROFILE = 'P'
-MUGSHOT = 'M'
-PERSONA_IMAGE_TYPE_CHOICES = (
-    (PROFILE, 'Profile'),
-    (MUGSHOT, 'Mugshot'),
 )
 
 # NOTE: these feel comprehensive, but there might be one more
@@ -55,6 +46,10 @@ class Entity(models.Model):
         help_text='Name of person/group/collective/circle/etc.'
     )
     # TODO: sort_name field?
+    avatar = models.ImageField(
+        upload_to='avatars',
+        blank=True,
+    )
 
     works = models.ManyToManyField(
         'comics.Installment',
@@ -251,10 +246,12 @@ class Persona(models.Model):
         default=1,
         help_text='Alter ego manner of being. (See: Shazam)',
     )
-    images = models.ManyToManyField(
-        'comics.GenericImage',
-        through='PersonaImage',
-        related_query_name='personas',
+    mugshot = models.ImageField(
+        upload_to='personas',
+        blank=True,
+    )
+    profile_pic = models.ImageField(
+        upload_to='personas',
         blank=True,
     )
 
@@ -304,29 +301,8 @@ class Persona(models.Model):
         self._cls_name = value
 
     @property
-    def mugshot(self):
-        try:
-            return self.images.filter(personaimage__type=MUGSHOT).first()
-        except ValueError:
-            return None
-
-    @mugshot.setter
-    @transaction.atomic
-    def mugshot(self, value):
-        current = self.mugshot
-        if value is current:
-            return
-        if current:
-            self.images \
-                .filter(personaimage__type=MUGSHOT) \
-                .update(is_deleted=True)
-            PersonaImage.objects \
-                .filter(persona=self, type=MUGSHOT) \
-                .all().delete()
-        if value:
-            value.save()
-            pi = PersonaImage(persona=self, image=value, type=MUGSHOT)
-            pi.save()
+    def avatar(self):
+        return self.mugshot
 
     objects = models.Manager()
     display_objects = PersonaDisplayManager()
@@ -342,29 +318,6 @@ class Persona(models.Model):
     def clean(self):
         # NOTE: Minimal cleaning is desirable and proper. Or is it?
         self.name = self.name.strip()
-
-
-# noinspection PyUnusedLocal
-@receiver(pre_delete, sender=Persona)
-def persona_images_delete_handler(sender, instance, **kwargs):
-    # flag is to prevent data loss should an error occur somewhere in a post_delete change
-    instance.images.update(is_deleted=True)
-
-
-class PersonaImage(models.Model):
-    persona = models.ForeignKey(
-        'Persona',
-        on_delete=models.CASCADE,
-    )
-    image = models.ForeignKey(
-        'comics.GenericImage',
-        on_delete=models.CASCADE,
-    )
-    type = models.CharField(
-        max_length=1,
-        choices=PERSONA_IMAGE_TYPE_CHOICES,
-        default=PROFILE,
-    )
 
 
 class Appearance(models.Model):

@@ -6,8 +6,8 @@
 {% block content %}
   <h3>{{ installment }}</h3>
   <div class="flow_grid">
-  {% for type, credit in credits %}
-    <span class="flow_cell credit_cell">{{ type }}: {{ credit }}</span>
+  {% for type, entities in credits %}
+    <span class="flow_cell credit_cell">{{ type }}: {% include 'metadata/_snippet-creator-list.html' with entities=entities %}</span>
   {% endfor %}
   </div>
   {% if appearances %}
@@ -15,7 +15,7 @@
     <p class="flow_cell appearances">Featuring:
       {% for persona in appearances %}
         {% if not forloop.first %}, {% endif %}
-        {% include 'metadata/_snippet-char-app.html' with persona=persona %}
+        {% include 'metadata/_snippet-character-link.html' with persona=persona %}
       {% endfor %}
     </p>
   </div>

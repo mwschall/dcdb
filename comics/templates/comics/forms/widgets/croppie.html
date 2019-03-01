@@ -1,19 +1,36 @@
-<div class="related-widget-wrapper cf-container{% if widget.preview %} initial locked{% endif %}" id="{{ widget.attrs.id }}">
-  <div class="cf-display">
-    <div class="cf-preview"{% if widget.preview %} style="background-image: url('{{ widget.preview }}');"{% endif %}>
-       <a class="cf-upload file-button">
-         <span class="cf-msg">Upload</span>
-         <input type="file" name="{{ widget.name }}" accept="image/*">
-         <input type="hidden" name="{{ widget.name }}_crop"{% if widget.value != None %} value="{{ widget.value|stringformat:'s' }}"{% endif %}>
-       </a>
-    </div>
-    <div class="cf-wrapper">
-      <div class="cf-croppie-area"></div>
-    </div>
+<div class="related-widget-wrapper cf-container {% if widget.value %}initial-value{% else %}blank{% endif %}" id="{{ widget.attrs.id }}-widget" data-croppie="{{ widget.attrs.id }}">
+  <div class="cf-display cf-edit" id="{{ widget.attrs.id }}-display" style="
+      flex-basis: {{ widget.preview_width }}px;
+      width: {{ widget.preview_width }}px;
+      height: {{ widget.preview_height }}px;
+      {% if widget.value %}background-image: url('{{ widget.value }}');{% endif %}
+      ">
+    <span class="cf-nada" style="
+      width: {{ widget.preview_width }}px;
+      height: {{ widget.preview_height }}px;
+      ">?</span>
   </div>
   <div class="cf-actions">
-    <input type="button" value="Clear" class="cf-clear">
-    <input type="button" value="Cancel" class="cf-cancel">
-    <input type="button" value="Lock" class="cf-lock">
+    <input type="hidden" name="{{ widget.name }}_crop" value="{{ widget.value }}" id="{{ widget.attrs.id }}-crop">
+    <input type="file" name="{{ widget.name }}" accept="image/*" id="{{ widget.attrs.id }}-input">
+    <label for="{{ widget.attrs.id }}-input" data-croppie-choose role="button">Choose Image</label>
+    <a class="cf-discard" role="button" tabindex="0" data-croppie-discard>Discard Image</a>
+  </div>
+</div>
+<div class="modal micromodal-slide cf-modal" id="{{ widget.attrs.id }}-modal" data-croppie="{{ widget.attrs.id }}" aria-hidden="true">
+  <div class="modal__overlay" tabindex="-1">
+    <div class="modal__container" role="dialog" aria-modal="true" aria-labelledby="{{ widget.attrs.id }}-modal-title">
+      <header class="modal__header">
+        <h4 class="modal__title" id="{{ widget.attrs.id }}-modal-title">Edit Image</h4>
+        <button class="modal__close" aria-label="Close modal" data-micromodal-close></button>
+      </header>
+      <main class="modal__content" id="{{ widget.attrs.id }}-modal-content">
+        <div class="cf-croppie-area" id="{{ widget.attrs.id }}-croppie" data-viewport="{{ widget.viewport }}"></div>
+      </main>
+      <footer class="modal__footer">
+        <input type="button" value="Save" class="modal__btn modal__btn-primary cf-commit">
+        <input type="button" value="Cancel" class="modal__btn" data-micromodal-close aria-label="Close this dialog window">
+      </footer>
+    </div>
   </div>
 </div>

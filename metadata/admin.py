@@ -12,7 +12,7 @@ from django.forms import widgets
 from django.forms.formsets import DELETION_FIELD_NAME
 
 from comics.admin import InstallmentAdmin
-from comics.forms import CroppieField
+from comics.forms import CroppieField, CroppieInput
 from comics.models import Installment
 from comics.util import is_model_request
 from metadata.models import Persona, Appearance, Character, Classification, CharacterUrl, EntityUrl, Entity, Role, \
@@ -51,10 +51,25 @@ class EntityUrlInline(SortableInlineAdminMixin, admin.TabularInline):
     extra = 0
 
 
+class EntityForm(forms.ModelForm):
+    avatar = CroppieField(
+        required=False,
+        widget=CroppieInput(
+            preview_size=MUGSHOT_SIZE,
+            circular_viewport=True,
+        ),
+    )
+
+    class Meta:
+        model = Entity
+        fields = '__all__'
+
+
 @admin.register(Entity)
 class EntityAdmin(admin.ModelAdmin):
     search_fields = ('working_name',)
     inlines = [EntityUrlInline]
+    form = EntityForm
 
 
 @admin.register(Role)
@@ -264,32 +279,27 @@ class PersonaForm(forms.ModelForm):
     mugshot = CroppieField(
         label='Mug shot',
         required=False,
-        crop_size=MUGSHOT_SIZE,
+        widget=CroppieInput(
+            preview_size=MUGSHOT_SIZE,
+            circular_viewport=True,
+        ),
+    )
+    profile_pic = CroppieField(
+        required=False,
+        widget=CroppieInput(
+            preview_size=(300, 485),
+        ),
     )
 
     class Meta:
         model = Persona
-        fields = (
-            'character',
-            'name',
-            'type',
-            'classification',
-            'creators',
-            'mugshot',
-        )
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # can add new Personas to Characters, but not reassign them
         if self.instance.pk:
             self.fields['character'].disabled = True
-        # dunno if there is a better way to do this...
-        self.initial['mugshot'] = self.instance.mugshot
-
-    def _save_m2m(self):
-        super()._save_m2m()
-        if 'mugshot' in self.cleaned_data:
-            self.instance.mugshot = self.cleaned_data['mugshot']
 
 
 @admin.register(Persona)

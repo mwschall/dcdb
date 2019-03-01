@@ -1,82 +1,129 @@
 import json
 import re
 from decimal import Decimal
+from io import BytesIO
 from json import JSONDecodeError
+from pathlib import Path
 
+from PIL import Image
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.forms import FileInput, ImageField, RegexField
-from django.forms.widgets import FILE_INPUT_CONTRADICTION
+from django.forms.widgets import Input
 from django.utils.translation import gettext_lazy as _
 
-from comics.models import GenericImage
-from comics.util import unpack_numeral
+from comics.util import unpack_numeral, s_uuid
 
 CROPPIE_VERSION = '2.6.3'
 # TODO: install and manage croppie via npm
 
+IMAGE_CROP_CONTRADICTION = object()
 
-class CroppieInput(FileInput):
+
+class MicroModal(Input):
+    class Media:
+        css = {
+            'all': (
+                'admin/css/micromodal.css',
+            )
+        }
+        js = (
+            'https://unpkg.com/micromodal/dist/micromodal.min.js',
+        )
+
+
+class CroppieInput(MicroModal, FileInput):
     template_name = 'comics/forms/widgets/croppie.html'
 
     class Media:
         css = {
             'all': (
                 'https://cdnjs.cloudflare.com/ajax/libs/croppie/%s/croppie.css' % CROPPIE_VERSION,
-                'comics/croppieField.css',
+                'admin/css/croppieField.css',
             )
         }
         js = (
             'https://cdnjs.cloudflare.com/ajax/libs/croppie/%s/croppie.min.js' % CROPPIE_VERSION,
-            'comics/croppieField.js',
+            'admin/js/croppieField.js',
         )
 
+    def __init__(self, *, preview_size=(50, 50), circular_viewport=False, **kwargs):
+        self.preview_size = preview_size
+        self.circular_viewport = circular_viewport
+        super().__init__(**kwargs)
+
     def format_value(self, value):
-        if isinstance(value, GenericImage):
-            return json.dumps({
-                'url': value.src.url,
-                'points': value.box,
-            })
+        if value:
+            return value.url
 
     def value_from_datadict(self, data, files, name):
         upload = super().value_from_datadict(data, files, name)
+        crop_val = data[name + '_crop']
         try:
-            data = json.loads(data[name + '_crop'])
-            box = [int(p) for p in data['points']]
+            crop_data = json.loads(crop_val)
+            box = [int(p) for p in crop_data['points']]
             if upload:
                 upload.box = box
         except (KeyError, JSONDecodeError):
             # same basic logic as ClearableFileInput
-            if not self.is_required:
+            if not self.is_required and not crop_val:
                 if upload:
-                    # TODO: this should be a custom error
-                    return FILE_INPUT_CONTRADICTION
+                    return IMAGE_CROP_CONTRADICTION
                 return False
             return None
         return upload
 
     def get_context(self, name, value, attrs):
         context = super().get_context(name, value, attrs)
-        if isinstance(value, GenericImage):
-            context['widget']['preview'] = value.scaled.url
+        context['widget']['preview_width'] = self.preview_size[0]
+        context['widget']['preview_height'] = self.preview_size[1]
+        context['widget']['viewport'] = json.dumps({
+            'type': 'circle' if self.circular_viewport else 'square',
+        })
         return context
 
 
 class CroppieField(ImageField):
     widget = CroppieInput
+    default_error_messages = {
+        'crop_confusion': _('Needs more crop-age.')
+    }
     # TODO: a validator for the returned crop box points
 
-    def __init__(self, *, crop_size, **kwargs):
-        self.crop_size = crop_size
-        super().__init__(**kwargs)
-
     def to_python(self, data):
+        # let ImageField to its thing
         f = super().to_python(data)
-        if f is not None:
-            # is maybe not correct to return a model field here, but
-            # does make things cleaner
-            return GenericImage(src=f, box=f.box, size=self.crop_size)
+        if f is None:
+            return None
 
-    def run_validators(self, value):
-        super().run_validators(value and value.src)
+        # rename to avoid conflicts in the currently flat storage scheme
+        uuid_name = s_uuid()
+
+        # don't crop unless necessary
+        if f.box is None or f.box == [0, 0, f.image.width, f.image.height]:
+            f.name = '{}{}'.format(uuid_name, Path(f.name).suffix)
+            return f
+
+        # gotta reopen because Image.verify() consumes the file pointer
+        if hasattr(data, 'temporary_file_path'):
+            file = data.temporary_file_path()
+        else:
+            if hasattr(data, 'read'):
+                file = BytesIO(data.read())
+            else:
+                file = BytesIO(data['content'])
+
+        # crop and save as optimized png for best-est qualities
+        buf = BytesIO()
+        with Image.open(file) as src:
+            src.crop(f.box).save(buf, 'PNG', optimize=True)
+        fc = InMemoryUploadedFile(buf, None, '{}.png'.format(uuid_name), 'image/png', buf.tell(), None)
+        return fc
+
+    def clean(self, data, initial=None):
+        if data is IMAGE_CROP_CONTRADICTION:
+            raise ValidationError(self.error_messages['crop_confusion'], code='crop_confusion')
+        return super().clean(data, initial)
 
 
 class NumeralField(RegexField):

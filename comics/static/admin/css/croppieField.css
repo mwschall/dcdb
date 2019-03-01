@@ -1,0 +1,109 @@
+.cf-container {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+.cf-display {
+  flex: 0 0;
+  background-size: 100% 100%;
+  border: 1px solid #aaa;
+  user-select: none;
+}
+
+.cf-display span {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 2rem;
+  color: #aaa;
+}
+
+.cf-display,
+.cf-actions [role="button"] {
+  margin: 0  1rem 10px 0;
+}
+
+/* https://benmarshall.me/styling-file-inputs/ */
+[type="file"] {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute !important;
+  white-space: nowrap;
+  width: 1px;
+}
+
+[type="file"] + label {
+  float: none;
+  width: auto;
+  word-wrap: unset;
+  background-color: #79aec8;
+  border-radius: 0.25rem;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  height: 2.375rem;
+  line-height: 2.375rem;
+  padding: 0 1rem;
+  transition: background-color 0.3s;
+}
+
+[type="file"]:focus + label,
+[type="file"] + label:hover {
+    background-color: #609ab6;
+}
+
+[type="file"]:focus + label {
+  outline: 1px dotted #000;
+  outline: -webkit-focus-ring-color auto 5px;
+}
+
+@media (max-width: 767px) {
+  .aligned [type="file"] + label {
+    width: auto;
+    padding: 0 1rem;
+  }
+}
+
+a[role="button"] {
+  font-weight: bold;
+  line-height: 2.375rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+a[role="button"]:hover {
+  text-decoration: underline;
+}
+a[role="button"]:focus {
+  outline: none;
+}
+
+.cf-container.blank a[role="button"] {
+  color: #aaa;
+  text-decoration: none;
+  cursor: default;
+}
+.cf-container.has-value .cf-edit {
+  cursor: pointer;
+}
+.cf-container.has-value .cf-nada,
+.cf-container.initial-value .cf-nada {
+  display: none;
+}
+
+.cf-modal .modal__container {
+  padding: 1rem;
+}
+.cf-modal .modal__title {
+  margin: 0;
+  padding: 0;
+}
+.cf-modal .modal__content {
+  margin-bottom: 0;
+}
+.cf-modal .modal__btn {
+  min-width: 4.25rem;
+}
+

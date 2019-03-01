@@ -94,6 +94,7 @@
 .appearance {
   white-space: nowrap;
 }
+.creator img,
 .appearance img {
   display: inline-block;
   width: 1rem;
