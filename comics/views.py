@@ -20,7 +20,7 @@ p = inflect.engine()
 # See also: http://stackoverflow.com/questions/480214/
 def fmt_credit_list(credit_list):
     if len({c.entity for c in credit_list}) == 1:
-        return [(_("by"), credit_list[0].entity)]
+        return [(_("by"), (credit_list[0].entity,))]
     else:
         raw = [
             (str(r), tuple(map(lambda c: c.entity, cl)))

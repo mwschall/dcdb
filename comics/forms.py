@@ -8,8 +8,7 @@ from pathlib import Path
 from PIL import Image
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.forms import FileInput, ImageField, RegexField
-from django.forms.widgets import Input
+from django.forms import FileInput, ImageField, RegexField, Widget
 from django.utils.translation import gettext_lazy as _
 
 from comics.util import unpack_numeral, s_uuid
@@ -20,7 +19,7 @@ CROPPIE_VERSION = '2.6.3'
 IMAGE_CROP_CONTRADICTION = object()
 
 
-class MicroModal(Input):
+class MicroModal(Widget):
     class Media:
         css = {
             'all': (
