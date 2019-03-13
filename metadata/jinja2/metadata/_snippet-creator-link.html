@@ -1,5 +1,5 @@
-{% if entity %}
+{% if creator %}
 <a class="creator">
-  {%- if entity.avatar %}<img src="{{ thumburl('50x50', source=entity.avatar) }}" alt="Avatar of {{ entity }}"> {% endif %}
-  {{- entity }}</a>
+  {%- if creator.avatar %}<img src="{{ thumburl('50x50', source=creator.avatar) }}" alt="Avatar of {{ creator }}"> {% endif %}
+  {{- creator }}</a>
 {%- endif %}

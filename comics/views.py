@@ -19,11 +19,11 @@ p = inflect.engine()
 
 # See also: http://stackoverflow.com/questions/480214/
 def fmt_credit_list(credit_list):
-    if len({c.entity for c in credit_list}) == 1:
-        return [(_("by"), (credit_list[0].entity,))]
+    if len({c.creator for c in credit_list}) == 1:
+        return [(_("by"), (credit_list[0].creator,))]
     else:
         raw = [
-            (str(r), tuple(map(lambda c: c.entity, cl)))
+            (str(r), tuple(map(lambda c: c.creator, cl)))
             for r, cl in groupby(credit_list, lambda c: c.role)
         ]
         return [(ungettext(r, p.plural(r), len(el)), el) for r, el in raw]
@@ -97,7 +97,7 @@ def installment_detail(request, installment):
         return Response(context)
 
     credit_list = installment.credits \
-        .select_related('role', 'entity') \
+        .select_related('role', 'creator') \
         .all()
 
     # Notes:

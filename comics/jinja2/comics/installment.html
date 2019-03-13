@@ -3,7 +3,7 @@
 {% block content %}
   <h3>{{ installment }}</h3>
   <div class="flow_grid">
-  {% for type, entities in credits %}
+  {% for type, creators in credits %}
     <span class="flow_cell credit_cell">{{ type }}:
       {% include 'metadata/_snippet-creator-list.html' %}
     </span>

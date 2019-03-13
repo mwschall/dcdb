@@ -37,10 +37,10 @@ APPEARANCE_TYPE_CHOICES = (
 
 
 #########################################
-# Creative Entities and Roles           #
+# Creators and Roles                    #
 #########################################
 
-class Entity(models.Model):
+class Creator(models.Model):
     working_name = models.CharField(
         max_length=100,
         unique=True,
@@ -55,12 +55,12 @@ class Entity(models.Model):
     works = models.ManyToManyField(
         'comics.Installment',
         through='metadata.Credit',
-        related_name='entities',
+        related_name='creators',
     )
 
     class Meta:
         ordering = ['working_name']
-        verbose_name_plural = 'entities'
+        verbose_name_plural = 'creators'
 
     def __str__(self):
         return self.working_name
@@ -70,9 +70,9 @@ class Entity(models.Model):
         self.working_name = self.working_name.strip()
 
 
-class EntityUrl(models.Model):
-    entity = models.ForeignKey(
-        'metadata.Entity',
+class CreatorUrl(models.Model):
+    creator = models.ForeignKey(
+        'metadata.Creator',
         related_name='urls',
         on_delete=models.CASCADE,
     )
@@ -117,8 +117,8 @@ class Credit(models.Model):
         related_name='credits',
         on_delete=models.CASCADE,
     )
-    entity = models.ForeignKey(
-        'metadata.Entity',
+    creator = models.ForeignKey(
+        'metadata.Creator',
         related_name='credits',
         on_delete=models.CASCADE,
     )
@@ -128,14 +128,14 @@ class Credit(models.Model):
     )
 
     class Meta:
-        ordering = ['role__order', 'entity__working_name']
-        unique_together = ('installment', 'role', 'entity')
+        ordering = ['role__order', 'creator__working_name']
+        unique_together = ('installment', 'role', 'creator')
 
     def __str__(self):
-        return '%s [%s]' % (self.entity, self.role)
+        return '%s [%s]' % (self.creator, self.role)
 
     def __hash__(self):
-        return hash((self.entity, self.role))
+        return hash((self.creator, self.role))
 
 
 #########################################
@@ -185,7 +185,7 @@ class Character(models.Model):
 
     @property
     def creators(self):
-        return Entity.objects.filter(persona__character=self).distinct()
+        return Creator.objects.filter(persona__character=self).distinct()
 
     @property
     def mugshot(self):
@@ -260,7 +260,7 @@ class Persona(models.Model):
     )
 
     creators = models.ManyToManyField(
-        'metadata.Entity',
+        'metadata.Creator',
         related_name='personas',
         related_query_name='persona',
         blank=True,

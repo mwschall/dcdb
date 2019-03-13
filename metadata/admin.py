@@ -15,7 +15,7 @@ from comics.admin import InstallmentAdmin
 from comics.forms import CroppieField, CroppieInput
 from comics.models import Installment
 from comics.util import is_model_request
-from metadata.models import Persona, Appearance, Character, Classification, CharacterUrl, EntityUrl, Entity, Role, \
+from metadata.models import Persona, Appearance, Character, Classification, CharacterUrl, CreatorUrl, Creator, Role, \
     Credit
 
 MAX_ORD = 32767
@@ -41,17 +41,17 @@ creators.short_description = 'Creator(s)'
 
 
 #########################################
-# Entity Admin                          #
+# Creator Admin                         #
 #########################################
 
 
-class EntityUrlInline(SortableInlineAdminMixin, admin.TabularInline):
+class CreatorUrlInline(SortableInlineAdminMixin, admin.TabularInline):
     classes = ['collapse']
-    model = EntityUrl
+    model = CreatorUrl
     extra = 0
 
 
-class EntityForm(forms.ModelForm):
+class CreatorForm(forms.ModelForm):
     avatar = CroppieField(
         required=False,
         widget=CroppieInput(
@@ -61,15 +61,15 @@ class EntityForm(forms.ModelForm):
     )
 
     class Meta:
-        model = Entity
+        model = Creator
         fields = '__all__'
 
 
-@admin.register(Entity)
-class EntityAdmin(admin.ModelAdmin):
+@admin.register(Creator)
+class CreatorAdmin(admin.ModelAdmin):
     search_fields = ('working_name',)
-    inlines = [EntityUrlInline]
-    form = EntityForm
+    inlines = [CreatorUrlInline]
+    form = CreatorForm
 
 
 @admin.register(Role)
@@ -487,10 +487,10 @@ class CreditInline(TabularInline):
     extra = 0
 
     fields = (
-        'entity',
+        'creator',
         'role',
     )
-    autocomplete_fields = ('entity',)
+    autocomplete_fields = ('creator',)
 
 
 class AppearancesInline(admin.TabularInline):
