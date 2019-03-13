@@ -1,0 +1,15 @@
+<div class="character_wall">
+{% for character in characters %}
+  {% with link_id=character.character_id or character.id %}
+  {% if character.mugshot %}
+  <a class="mug" href="{{ url('metadata:character', args=[link_id]) }}" title="{{ character.name }}">
+    <img src="{{ thumburl('50x50', source=character.mugshot) }}" alt="{{ character.name }}">
+  </a>
+  {% else %}
+  <a class="mug no_img" href="{{ url('metadata:character', args=[link_id]) }}" title="{{ character.name }}">
+    <span class="name">{{ character.name }}</span>
+  </a>
+  {% endif %}
+  {% endwith %}
+{% endfor %}
+</div>

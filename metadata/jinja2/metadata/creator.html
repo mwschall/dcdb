@@ -2,7 +2,12 @@
 
 {% block content %}
 <article>
-  <h1>Characters</h1>
+<h1>{{ creator.working_name }}</h1>
+{% if has_characters %}
+<section class="characters">
+  <h2>Characters</h2>
   {% include 'metadata/_snippet-character-wall.html' %}
+</section>
+{% endif %}
 </article>
 {% endblock %}

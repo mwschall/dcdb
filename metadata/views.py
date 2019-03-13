@@ -1,17 +1,21 @@
-from django.db.models import F
+from django.db.models import F, Exists, OuterRef, Q
 from django.db.models.query import Prefetch
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 
 from comics.expressions import GroupConcat
 from comics.models import Installment, Page
-from metadata.models import Character, Creator
+from metadata.models import Character, Creator, Persona
 
 
 @api_view(['GET'])
 def character_index(request):
-    characters = Character.objects.all()
+    characters = Character.objects \
+        .select_related('primary_persona') \
+        .all()
+
     # TODO: group by name/classification/other
+
     context = {
         'characters': characters,
     }
@@ -38,7 +42,7 @@ def character_page(request, character):
         FROM   	            T   
                 INNER JOIN  comics_series
                 ON          comics_series.id = T.series_id
-        WHERE   ordinal = 1 AND (
+        WHERE   T.ordinal = 1 AND (
                 T.series_id	IN (SELECT  ci0.series_id
                                 FROM                comics_installment ci0
                                         INNER JOIN  metadata_appearance ma1 
@@ -60,15 +64,6 @@ def character_page(request, character):
 
 @api_view(['GET'])
 def creator_index(request):
-    # role_names = Role.objects \
-    #     .filter(creators__pk=OuterRef('pk')) \
-    #     .annotate(names=NAGroupConcat('name', distinct=True)) \
-    #     .values('names')
-    #
-    # creators = Creator.objects \
-    #     .annotate(role_names=Subquery(role_names)) \
-    #     .iterator()
-
     # NOTE: gotta do a Subquery to easily sort by Role.order
     creators = Creator.objects \
         .annotate(role_names=GroupConcat(F('roles__name'), distinct=True)) \
@@ -78,3 +73,25 @@ def creator_index(request):
         'creators': creators,
     }
     return render(request, 'metadata/creators.html', context)
+
+
+@api_view(['GET'])
+def creator_page(request, creator):
+    creator = get_object_or_404(Creator, id=creator)
+
+    # show only primary if is created by, else list each Persona individually
+    characters = Persona.objects \
+        .annotate(is_primary=Exists(Character.objects.filter(primary_persona=OuterRef('pk'))),
+                  has_primary=Exists(Character.objects.filter(primary_persona__creators__pk=creator.pk,
+                                                              pk=OuterRef('character_id')))) \
+        .filter(Q(is_primary=True) | Q(has_primary=False),
+                creators__pk=creator.pk) \
+        .only('name', 'mugshot', 'character_id') \
+        .iterator()
+
+    context = {
+        'creator': creator,
+        'characters': characters,
+        'has_characters': Persona.objects.filter(creators__pk=creator.pk).exists(),
+    }
+    return render(request, 'metadata/creator.html', context)
