@@ -237,7 +237,7 @@ class Series(ThreadMixin, models.Model):
         default=False,
     )
     installment_label = models.ForeignKey(
-        'InstallmentLabel',
+        'comics.InstallmentLabel',
         on_delete=models.PROTECT,
         default=InstallmentLabel.get_default_label,
         help_text='Numbers will be prefixed with this value when displayed.'
@@ -271,7 +271,7 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
     SECOND_NUMBER = 5
 
     series = models.ForeignKey(
-        'Series',
+        'comics.Series',
         on_delete=models.CASCADE,
         related_name='installments',
     )
@@ -301,7 +301,7 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
         default=True,
     )
     page = models.OneToOneField(
-        'Page',
+        'comics.Page',
         on_delete=models.SET_NULL,
         related_name='strip',
         null=True,
@@ -381,7 +381,7 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
 
 class Page(SourceImage):
     installment = models.ForeignKey(
-        'Installment',
+        'comics.Installment',
         on_delete=models.CASCADE,
         related_name='pages',
     )
@@ -431,8 +431,8 @@ class Thread(models.Model):
         default=False,
     )
     installments = models.ManyToManyField(
-        'Installment',
-        through='ThreadSequence',
+        'comics.Installment',
+        through='comics.ThreadSequence',
     )
 
     def __str__(self):
@@ -456,14 +456,14 @@ class Thread(models.Model):
 
 class ThreadSequence(models.Model):
     thread = models.ForeignKey(
-        'Thread',
+        'comics.Thread',
         on_delete=models.CASCADE,
     )
     order = models.PositiveSmallIntegerField(
         default=0,
     )
     installment = models.ForeignKey(
-        'Installment',
+        'comics.Installment',
         on_delete=models.PROTECT,
     )
     # TODO: make these ForeignKeys for a number of reasons

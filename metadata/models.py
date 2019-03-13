@@ -54,7 +54,7 @@ class Entity(models.Model):
 
     works = models.ManyToManyField(
         'comics.Installment',
-        through='Credit',
+        through='metadata.Credit',
         related_name='entities',
     )
 
@@ -72,7 +72,7 @@ class Entity(models.Model):
 
 class EntityUrl(models.Model):
     entity = models.ForeignKey(
-        'Entity',
+        'metadata.Entity',
         related_name='urls',
         on_delete=models.CASCADE,
     )
@@ -118,12 +118,12 @@ class Credit(models.Model):
         on_delete=models.CASCADE,
     )
     entity = models.ForeignKey(
-        'Entity',
+        'metadata.Entity',
         related_name='credits',
         on_delete=models.CASCADE,
     )
     role = models.ForeignKey(
-        'Role',
+        'metadata.Role',
         on_delete=models.CASCADE,
     )
 
@@ -161,7 +161,7 @@ class Classification(models.Model):
 
 class Character(models.Model):
     primary_persona = models.OneToOneField(
-        'Persona',
+        'metadata.Persona',
         related_name='primary_for',
         # NOTE: should NEVER be null, but practically speaking it has to be enforced in business logic
         on_delete=models.SET_NULL,
@@ -204,7 +204,7 @@ class Character(models.Model):
 
 class CharacterUrl(models.Model):
     character = models.ForeignKey(
-        'Character',
+        'metadata.Character',
         related_name='urls',
         on_delete=models.CASCADE,
     )
@@ -227,7 +227,7 @@ class PersonaDisplayManager(models.Manager):
 
 class Persona(models.Model):
     character = models.ForeignKey(
-        'Character',
+        'metadata.Character',
         related_name='personas',
         on_delete=models.CASCADE,
         blank=True,
@@ -244,7 +244,7 @@ class Persona(models.Model):
         help_text='Alter ego type or purpose.',
     )
     classification = models.ForeignKey(
-        'Classification',
+        'metadata.Classification',
         related_name='personas',
         on_delete=models.PROTECT,
         default=1,
@@ -260,7 +260,7 @@ class Persona(models.Model):
     )
 
     creators = models.ManyToManyField(
-        'Entity',
+        'metadata.Entity',
         related_name='personas',
         related_query_name='persona',
         blank=True,
@@ -268,12 +268,12 @@ class Persona(models.Model):
 
     installments = models.ManyToManyField(
         'comics.Installment',
-        through='Appearance',
+        through='metadata.Appearance',
         related_name='personas',
     )
     pages = models.ManyToManyField(
         'comics.Page',
-        through='Appearance',
+        through='metadata.Appearance',
         related_name='personas',
     )
 
@@ -329,7 +329,7 @@ class Persona(models.Model):
 
 class Appearance(models.Model):
     persona = models.ForeignKey(
-        'Persona',
+        'metadata.Persona',
         # TODO: PROTECT may be better, but using CASCADE during initial development
         on_delete=models.CASCADE,
         related_name='appearances',
