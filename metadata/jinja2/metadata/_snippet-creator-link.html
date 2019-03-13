@@ -1,5 +1,5 @@
 {% if creator %}
 <a class="creator">
   {%- if creator.avatar %}<img src="{{ thumburl('50x50', source=creator.avatar) }}" alt="Avatar of {{ creator }}"> {% endif %}
-  {{- creator }}</a>
+  {%- if strong == True %}<strong>{{ creator }}</strong>{% else %}{{ creator }}{% endif %}</a>
 {%- endif %}

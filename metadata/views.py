@@ -1,9 +1,11 @@
+from django.db.models import F
 from django.db.models.query import Prefetch
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 
+from comics.expressions import GroupConcat
 from comics.models import Installment, Page
-from metadata.models import Character
+from metadata.models import Character, Creator
 
 
 @api_view(['GET'])
@@ -54,3 +56,25 @@ def character_page(request, character):
         'first_issues': first_issues,
     }
     return render(request, 'metadata/character.html', context)
+
+
+@api_view(['GET'])
+def creator_index(request):
+    # role_names = Role.objects \
+    #     .filter(creators__pk=OuterRef('pk')) \
+    #     .annotate(names=NAGroupConcat('name', distinct=True)) \
+    #     .values('names')
+    #
+    # creators = Creator.objects \
+    #     .annotate(role_names=Subquery(role_names)) \
+    #     .iterator()
+
+    # NOTE: gotta do a Subquery to easily sort by Role.order
+    creators = Creator.objects \
+        .annotate(role_names=GroupConcat(F('roles__name'), distinct=True)) \
+        .iterator()
+
+    context = {
+        'creators': creators,
+    }
+    return render(request, 'metadata/creators.html', context)

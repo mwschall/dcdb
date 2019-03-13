@@ -1,7 +1,8 @@
 {% extends 'metadata/_standard.html' %}
 
 {% block content %}
-  <div>
+<article>
+  <h3>Characters</h3>
   {% for character in characters %}
     {% if character.mugshot.image_url %}
     <a class="mug" href="{{ url('metadata:character', args=[character.id]) }}" title="{{ character.name }}">
@@ -13,5 +14,5 @@
    </a>
     {% endif %}
   {% endfor %}
-  </div>
+</article>
 {% endblock %}

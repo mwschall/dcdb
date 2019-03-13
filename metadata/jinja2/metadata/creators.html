@@ -1,0 +1,23 @@
+{% extends 'metadata/_standard.html' %}
+
+{% block content %}
+<article>
+  <h3>Creators</h3>
+  <ul>
+  {% with strong=True %}
+  {% for creator in creators %}
+    <li>
+      {%- include 'metadata/_snippet-creator-link.html' %}
+      {% if creator.role_names %} –&nbsp;
+      {%- for role in creator.role_names.split(',')|sort %}
+        {% if loop.last and loop.length > 2 %}and {% endif %}
+        {{- role|capitalize }}
+        {%- if not loop.last and loop.length > 1 %}, {% endif %}
+      {% endfor %}
+      {% endif -%}
+    </li>
+  {% endfor %}
+  {% endwith %}
+  </ul>
+</article>
+{% endblock %}

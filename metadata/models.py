@@ -58,6 +58,12 @@ class Creator(models.Model):
         related_name='creators',
     )
 
+    roles = models.ManyToManyField(
+        'metadata.Role',
+        through='metadata.Credit',
+        related_name='creators',
+    )
+
     class Meta:
         ordering = ['working_name']
         verbose_name_plural = 'creators'
