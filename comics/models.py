@@ -351,12 +351,20 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
         return None
 
     @property
+    def display_number(self):
+        if self.numeral is not None:
+            if re.search(r'\W$', self.label):
+                tmpl = 'Issue {}{}'
+            else:
+                tmpl = '{} {}'
+            return tmpl.format(self.label, self.numeral)
+
+    @property
     def name(self):
         name = [self.series.name]
         if self.numeral is not None:
-            label = self.label
-            spacer = '' if re.search(r'\W$', label) else ' '
-            name += [' ', label, spacer, self.numeral]
+            spacer = '' if re.search(r'\W$', self.label) else ' '
+            name += [' ', self.label, spacer, self.numeral]
         if self.title:
             name += [' — ', self.title]
         return ''.join(name)
@@ -380,15 +388,37 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
         return "{}_{}".format(self.series.slug, self.ordinal)
 
     @property
+    def prev_id(self):
+        if not hasattr(self, '_prev_id'):
+            try:
+                prev_idx = self.ordinal - 2  # 1-indexed, so yeah...
+                self._prev_id = self.series.installments \
+                    .order_by('ordinal') \
+                    .values_list('pk', flat=True)[prev_idx]
+            except (AssertionError, IndexError):
+                self._prev_id = None
+        return self._prev_id
+
+    @prev_id.setter
+    def prev_id(self, value):
+        self._prev_id = value
+
+    @property
     def next_id(self):
-        # TODO: this should be possible with a LEAD() window function
-        try:
-            next_idx = self.ordinal  # 1-indexed, so yeah...
-            return self.series.installments \
-                .order_by('ordinal') \
-                .values_list('pk', flat=True)[next_idx]
-        except IndexError:
-            return None
+        # TODO: use a LEAD() window function in certain circumstances?
+        if not hasattr(self, '_next_id'):
+            try:
+                next_idx = self.ordinal  # 1-indexed, so yeah...
+                self._next_id = self.series.installments \
+                    .order_by('ordinal') \
+                    .values_list('pk', flat=True)[next_idx]
+            except IndexError:
+                self._next_id = None
+        return self._next_id
+
+    @next_id.setter
+    def next_id(self, value):
+        self._next_id = value
 
     @property
     def page_count(self):

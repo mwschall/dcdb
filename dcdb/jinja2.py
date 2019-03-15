@@ -1,4 +1,4 @@
-from django.template.defaultfilters import json_script
+from django.template.defaultfilters import json_script, date, time
 from django.templatetags.static import static
 from django.urls import reverse
 from jinja2 import Environment
@@ -20,10 +20,12 @@ def environment(**options):
         'thumburl': thumburl,
     })
     env.filters.update({
+        'date': date,
         'json_script': json_script,
         'oxford_comma': oxford_comma,
         'page_num': page_num,
         'role_summary': role_summary,
+        'time': time,
         'ugroupby': ugroupby,
     })
     return env

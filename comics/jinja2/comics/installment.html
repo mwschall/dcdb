@@ -1,8 +1,28 @@
 {% extends 'comics/_tmpl-standard.html' %}
 
 {% block content %}
+<article class="installment">
 {% with avatar=True %}
-  <h3>{{ installment }}</h3>
+  <h1>
+    <a href="{{ url('comics:series', args=[installment.series_id]) }}">{{ installment.series.name }}</a>
+    {%- if installment.display_number %} » <span class="number">{{ installment.display_number }}</span>
+    {% endif %}
+  </h1>
+  {% if installment.title %}
+  <h3>{{ installment.title }}</h3>
+  {% endif %}
+
+  {% if installment.prev_id or installment.next_id %}
+  <nav>
+  {% if installment.prev_id %}
+     <a href="{{ url('comics:installment', args=[installment.prev_id]) }}">Prev</a>
+  {% endif %}
+  {% if installment.next_id %}
+     <a href="{{ url('comics:installment', args=[installment.next_id]) }}">Next</a>
+  {% endif %}
+  </nav>
+  {% endif %}
+
   <div class="flow_grid">
   {% for type, creators in credits %}
     <span class="flow_cell credit_cell">{{ type }}:
@@ -27,4 +47,5 @@
   {% endfor %}
   </ol>
 {% endwith %}
+</article>
 {% endblock %}

@@ -1,0 +1,29 @@
+{% extends 'metadata/_standard.html' %}
+
+{% block content %}
+<article class="series">
+<h1>{{ series.name }}</h1>
+<section class="issues">
+  <ul class="flow_grid issue_grid">
+  {% for issue in installments %}
+    <li class="flow_cell">
+    <a class="issue{% if not issue.has_cover %} no_cover{% endif %}" href="{{ url('comics:installment', args=[issue.pk]) }}">
+      {% if issue.has_cover %}
+      <img class="issue_cover" src="{{ issue.cover.image_url }}" alt="Cover for {{ issue.name }}">
+      {% else %}
+      <div class="issue_cover"><h3 class="title">{{ '<No Cover>' }}</h3></div>
+      {% endif %}
+      {% if issue.display_number %}
+      <p class="issue_number">{{ issue.display_number}}</p>
+      {% endif %}
+      {% if issue.title %}
+      <p class="issue_name">{{ issue.title }}</p>
+      {% endif %}
+      <p class="issue_date">{{ issue.release_datetime|date('SHORT_DATE_FORMAT') }}</p>
+    </a>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+</article>
+{% endblock %}

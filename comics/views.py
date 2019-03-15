@@ -3,7 +3,7 @@ from operator import attrgetter
 
 import inflect
 from django.db.models import Count, Case, When, OuterRef, Exists
-from django.shortcuts import render, get_object_or_404, redirect
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import ugettext as _, ungettext
 from rest_framework.decorators import api_view, renderer_classes
@@ -172,8 +172,14 @@ def series_detail(request, series):
             'thread': serializer.data,
         }
         return Response(context)
-    else:
-        return redirect('comics:index')
+
+    installments = series.installments.order_by('-ordinal')
+
+    context = {
+        'series': series,
+        'installments': installments,
+    }
+    return render(request, 'comics/series.html', context)
 
 
 @api_view(['GET'])

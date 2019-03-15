@@ -8,6 +8,7 @@
 
 .flow_row .flow_cell {
   box-sizing: border-box;
+  flex: 0 0 auto;
   padding: 0.8rem 0.5rem 1rem;  /* NOTE: using margin will cut off the last element */
   position: relative;
 }
@@ -18,8 +19,26 @@
   padding-right: 1rem;
 }
 
-.flow_row .no_cover {
-  max-width: 15rem;
+.installment .number {
+  font-size: .9em;
+  font-style: italic;
+}
+
+.series .issue_cover {
+  margin-bottom: .5rem;
+}
+
+.issue p {
+  line-height: 1.5rem;
+  margin: 0;
+}
+
+.no_cover .issue_cover {
+  box-sizing: border-box;
+  border: 1px darkgray solid;
+  min-width: 11.0625rem;
+  max-width: 13.5rem;
+  height: calc(100% - 4px);
   overflow: hidden;
 }
 
@@ -53,7 +72,8 @@
   text-decoration: none;
 }
 
-.flow_grid img {
+.flow_grid .issue_cover,
+.flow_grid .page_image {
   width: auto;
   max-height: 17rem;
 }
@@ -83,11 +103,11 @@
   /* NOTE: inline-block is bad here because it can expand the hover bubble */
   position: relative;
 }
-.issue img {
+.issue_cover {
   box-shadow: 0 0.1875rem 0.625rem -0.1875rem rgba(0,0,0,0.75);
   transition: box-shadow 0.15s ease-out;
 }
-.issue:hover img {
+.issue:hover .issue_cover {
   box-shadow: 0 0.125rem 0.6875rem -0.125rem rgba(0,0,0,1);
 }
 
@@ -95,7 +115,7 @@
   text-align: center;
 }
 
-.issue.no_cover {
+.no_cover .issue_cover {
   display: flex;
   align-items: center;
   justify-content: center;
