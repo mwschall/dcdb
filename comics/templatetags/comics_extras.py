@@ -1,9 +1,12 @@
 import json
+from itertools import groupby
 
 from django import template
 from django.utils.encoding import force_text
 from django.utils.html import conditional_escape
 from django.utils.safestring import mark_safe
+from jinja2 import environmentfilter
+from jinja2.filters import make_attrgetter, _GroupTuple
 
 register = template.Library()
 
@@ -48,3 +51,11 @@ def oxford_comma(items, autoescape=True):
                 s += ', ' + item
 
     return mark_safe(s)
+
+
+# non-sorting version of jinja2.filter.groupby
+@environmentfilter
+def ugroupby(environment, value, attribute):
+    expr = make_attrgetter(environment, attribute)
+    return [_GroupTuple(key, list(values)) for key, values
+            in groupby(value, expr)]

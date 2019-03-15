@@ -1,3 +1,7 @@
+.character_wall {
+  overflow: hidden;
+}
+
 .mug {
   float: left;
   width: 50px;

@@ -9,5 +9,25 @@
   {% include 'metadata/_snippet-character-wall.html' %}
 </section>
 {% endif %}
+{% if has_series %}
+<section class="series">
+  <h2>Series</h2>
+  <ul class="flow_grid issue_grid">
+  {% for _, list in series|ugroupby('id') %}
+    <li class="flow_cell">
+    {% with title=list[0] %}
+    <a class="issue" href="{{ url('comics:series', args=[title.pk]) }}" title="{{ title.name }}">
+      <img class="issue_cover" src="{{ title.first_cover.image_url }}" alt="Cover for {{ title.name }}"><br>
+      <strong class="title">{{ title.name }}</strong><br>
+      <span class="roles">
+        {{- list|role_summary(title.installment_count)|map('capitalize')|oxford_comma -}}
+      </span>
+    </a>
+    {% endwith %}
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
 </article>
 {% endblock %}

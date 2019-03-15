@@ -34,39 +34,68 @@
 .flow_grid {
   display: flex;
   flex-flow: row wrap;
+  justify-content: space-evenly;
+  list-style: none;
   margin-left: -0.5rem;
   margin-right: -0.5rem;
+  padding: 0;
 }
 
 .flow_grid .flow_cell {
   box-sizing: border-box;
-  flex: 1 0 20%;
+  flex: 0 0 auto;
   min-width: 5em;
   padding: 0 0.5rem 1rem;
   position: relative;
 }
 
-.flow_grid img {
-  width: 100%;
+.flow_grid a {
+  text-decoration: none;
 }
 
-.issue_cell img {
-  box-shadow: 0 0.1875rem 1.25rem -0.1875rem rgba(0,0,0,0.75);
-  transition: box-shadow 0.2s ease-out;
+.flow_grid img {
+  width: auto;
+  max-height: 17rem;
 }
-.issue_cell:hover img {
-  box-shadow: 0 0.1875rem 1.25rem -0.0625rem rgba(0,0,0,1);
+
+.page_grid {
+  justify-content: flex-start;
+  padding: 0 0.25rem;
+}
+.page_grid .flow_cell {
+  /* dunno know where this extra 4px is coming from... */
+  padding: 0 0.25rem calc(0.5rem - 4px);
+}
+.page {
+  display: inline-block;
+  position: relative;
+}
+.page img {
+  height: 20vh;
+  min-height: 6rem;
+  max-height: 10rem;
+}
+
+.issue_grid .flow_cell {
+  text-align: center;
+}
+.issue {
+  /* NOTE: inline-block is bad here because it can expand the hover bubble */
+  position: relative;
+}
+.issue img {
+  box-shadow: 0 0.1875rem 0.625rem -0.1875rem rgba(0,0,0,0.75);
+  transition: box-shadow 0.15s ease-out;
+}
+.issue:hover img {
+  box-shadow: 0 0.125rem 0.6875rem -0.125rem rgba(0,0,0,1);
 }
 
 .credit_cell {
   text-align: center;
 }
 
-.page_cell {
-  min-width: 10em;
-}
-
-.no_cover {
+.issue.no_cover {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,9 +103,10 @@
 }
 
 .page_number {
+  display: none;
   background: #ccc;
   color: #222;
-  opacity: .6;
+  opacity: .85;
 
   font-size: .8rem;
   border-radius: 50%;
@@ -85,7 +115,10 @@
 
   position: absolute;
   top: 0.5rem;
-  right: 1rem;
+  right: 0.5rem;
+}
+.page:hover .page_number {
+  display: block;
 }
 
 .appearances {
@@ -107,4 +140,19 @@
   margin: -1.01rem;
   vertical-align: middle;
   border-radius: 50%;
+}
+
+@media only screen and (max-width: 414px) {
+  .page img {
+    height: 14.9vh;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  .page_grid {
+    justify-content: space-evenly;
+  }
+  .page_image {
+    height: 13.7vh;
+  }
 }

@@ -1,4 +1,4 @@
-from django.db.models import Aggregate, CharField
+from django.db.models import Aggregate, CharField, Subquery, IntegerField
 
 
 # https://stackoverflow.com/a/31337612
@@ -50,3 +50,12 @@ class GroupConcat(Aggregate):
 # noinspection PyAbstractClass
 class NAGroupConcat(GroupConcat):
     contains_aggregate = False
+
+
+# noinspection PyAbstractClass
+class SQCount(Subquery):
+    template = "(SELECT count(*) FROM (%(subquery)s) _count)"
+    output_field = IntegerField()
+
+    def get_source_expressions(self):
+        return []

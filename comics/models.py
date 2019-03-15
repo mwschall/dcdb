@@ -8,13 +8,14 @@ import shortuuid
 from PIL import Image
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, OuterRef
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import Truncator, capfirst
 
+from comics.expressions import SQCount
 from comics.fields import ShortUUIDField
 from comics.util import s_uuid, unpack_numeral
 
@@ -224,6 +225,12 @@ class ThreadMixin(object):
         return self.pages.count()
 
 
+class SeriesDisplayManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset() \
+            .annotate(installment_count=Series.installment_count_sq())
+
+
 class Series(ThreadMixin, models.Model):
     name = models.CharField(
         max_length=200,
@@ -248,6 +255,17 @@ class Series(ThreadMixin, models.Model):
         default=LTR,
     )
 
+    @property
+    def first_cover(self):
+        return self.installments.first().cover
+
+    @property
+    def latest_cover(self):
+        return self.installments.last().cover
+
+    objects = models.Manager()
+    display_objects = SeriesDisplayManager()
+
     class Meta:
         verbose_name_plural = "series"
 
@@ -263,6 +281,14 @@ class Series(ThreadMixin, models.Model):
     def pages(self):
         if self.is_strip:
             return self.installments.select_related('page')
+
+    @staticmethod
+    def installment_count_sq():
+        return SQCount(Installment.objects
+                       .order_by()
+                       .filter(series=OuterRef('pk'))
+                       .values('pk')
+                       )
 
 
 class Installment(ImageFileMixin, ThreadMixin, models.Model):

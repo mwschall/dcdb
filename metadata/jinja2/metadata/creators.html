@@ -8,13 +8,9 @@
   {% for creator in creators %}
     <li>
       {%- include 'metadata/_snippet-creator-link.html' %}
-      {% if creator.role_names %} –&nbsp;
-      {%- for role in creator.role_names.split(',')|sort %}
-        {% if loop.last and loop.length > 2 %}and {% endif %}
-        {{- role|capitalize }}
-        {%- if not loop.last and loop.length > 1 %}, {% endif %}
-      {% endfor %}
-      {% endif -%}
+      {%- if creator.role_names %} –
+        {{ creator.role_names.split(',')|sort|map('capitalize')|oxford_comma }}
+      {%- endif -%}
     </li>
   {% endfor %}
   {% endwith %}

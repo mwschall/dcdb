@@ -1,6 +1,7 @@
 {% extends 'comics/_tmpl-standard.html' %}
 
 {% block content %}
+{% with avatar=True %}
   <h3>{{ installment }}</h3>
   <div class="flow_grid">
   {% for type, creators in credits %}
@@ -14,12 +15,16 @@
     <p class="flow_cell appearances">{% include 'metadata/_snippet-appearance-list.html' %}</p>
   </div>
   {% endif %}
-  <div class="flow_grid">
+  <ol class="flow_grid page_grid">
   {% for page in pages %}
-    <a class="flow_cell page_cell" href="{{ url('comics:page', args=[installment.id, page.order]) }}">
+    <li class="flow_cell">
+    <a class="page" href="{{ url('comics:page', args=[installment.id, page.order]) }}">
       <span class="page_number">{{ page|page_num }}</span>
-      <img class="page_image" src="{{ page.image_url }}" />
+      <img class="page_image" src="{{ page.image_url }}"
+           width="{{ page.image_width }}px" height="{{ page.image_height }}px">
     </a>
+    </li>
   {% endfor %}
-  </div>
+  </ol>
+{% endwith %}
 {% endblock %}

@@ -1,10 +1,10 @@
-from django.db.models import F, Exists, OuterRef, Q
+from django.db.models import F, Exists, OuterRef, Q, Count
 from django.db.models.query import Prefetch
 from django.shortcuts import render, get_object_or_404
 from rest_framework.decorators import api_view
 
 from comics.expressions import GroupConcat
-from comics.models import Installment, Page
+from comics.models import Installment, Page, Series
 from metadata.models import Character, Creator, Persona
 
 
@@ -89,9 +89,21 @@ def creator_page(request, creator):
         .only('name', 'mugshot', 'character_id') \
         .iterator()
 
+    # return one row per role and perform a groupby in the template rendering
+    series = Series.display_objects \
+        .filter(installments__creators__pk=creator.pk) \
+        .annotate(role_name=F('installments__credits__role__name'),
+                  role_count=Count(F('installments__credits__role__name'))) \
+        .order_by('name', 'pk', 'installments__credits__role__order') \
+        .only('name')
+
+    # TODO: show cover of first installment with a credit on?
+
     context = {
         'creator': creator,
-        'characters': characters,
         'has_characters': Persona.objects.filter(creators__pk=creator.pk).exists(),
+        'characters': characters,
+        'has_series': Series.objects.filter(installments__credits__creator__pk=creator.pk).exists(),
+        'series': series,
     }
     return render(request, 'metadata/creator.html', context)

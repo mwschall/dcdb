@@ -4,8 +4,9 @@ from django.urls import reverse
 from jinja2 import Environment
 from webpack_loader.templatetags.webpack_loader import render_bundle
 
-from comics.templatetags.comics_extras import page_num
+from comics.templatetags.comics_extras import page_num, oxford_comma, ugroupby
 from comics.templatetags.image_extras import thumbgen, thumburl
+from metadata.templatetags.metadata_extras import role_summary
 
 
 def environment(**options):
@@ -20,6 +21,9 @@ def environment(**options):
     })
     env.filters.update({
         'json_script': json_script,
+        'oxford_comma': oxford_comma,
         'page_num': page_num,
+        'role_summary': role_summary,
+        'ugroupby': ugroupby,
     })
     return env
