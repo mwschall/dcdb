@@ -1,9 +1,12 @@
+from operator import itemgetter
 from urllib.parse import urlparse
 
 from django.db import models
 from django.db.models import F
 from django.urls import reverse
+from django.utils.functional import cached_property
 from django.utils.text import capfirst
+from tldextract import extract as urlextract
 
 #########################################
 # Defines                               #
@@ -35,6 +38,19 @@ APPEARANCE_TYPE_CHOICES = (
     (MENTIONED, 'Mentioned'),
 )
 
+# https://fontawesome.com/icons?d=gallery&s=brands
+DOMAIN_ICON_MAP = {
+    'blogger': 'blogger',
+    'blogspot': 'blogger',
+    'deviantart': 'deviantart',
+    'facebook': 'facebook',
+    'flickr': 'flickr',
+    'instagram': 'instagram',
+    'patreon': 'patreon',
+    'tumblr': '-square',
+    'twitter': 'twitter',
+}
+
 
 #########################################
 # Creators and Roles                    #
@@ -64,6 +80,17 @@ class Creator(models.Model):
         related_name='creators',
     )
 
+    @cached_property
+    def social_urls(self):
+        urls = [{'href': u.link, 'icon': u.icon_name}
+                for u in self.urls.all() if u.icon_name]
+        return sorted(urls, key=itemgetter('icon'))
+
+    @cached_property
+    def websites(self):
+        return [{'href': u.link, 'name': str(u)}
+                for u in self.urls.all() if not u.icon_name]
+
     class Meta:
         ordering = ['working_name']
         verbose_name_plural = 'creators'
@@ -87,6 +114,11 @@ class CreatorUrl(models.Model):
         default=0,
         help_text='Preferred display order.'
     )
+
+    @cached_property
+    def icon_name(self):
+        domain = urlextract(self.link).domain.lower()
+        return DOMAIN_ICON_MAP.get(domain)
 
     class Meta:
         ordering = ['order']

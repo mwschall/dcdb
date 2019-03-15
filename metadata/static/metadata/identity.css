@@ -57,3 +57,37 @@
 .bio {
   text-align: justify;
 }
+
+/* https://semantic-ui.com/elements/icon.html */
+i.icon {
+  box-sizing: border-box;
+  display: inline-block;
+  margin: 0 .25rem 0 0;
+  width: 1.18em;
+  height: 1em;
+  text-align: center;
+}
+i.bordered.icon {
+  line-height: 1;
+  vertical-align: baseline;
+  width: 2em;
+  height: 2em;
+  padding: .5em 0;
+
+  background-color: #000;
+  color: #fff;
+}
+i.link.icon {
+  cursor: pointer;
+  opacity: .8;
+  transition: opacity .1s ease;
+}
+i.link.icon:hover {
+    opacity: 1;
+}
+
+.creator .websites {
+  list-style: none;
+  padding: 0;
+}
+
