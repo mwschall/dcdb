@@ -1,6 +1,7 @@
 {% extends 'comics/_tmpl-base.html' %}
 
 {% block skeletoncss %}
+  <link rel="stylesheet" href="{{ static('comics/viewer.css') }}">
   {% if not debug %}
     {{ render_bundle('app', 'css') }}
   {% endif %}
@@ -11,7 +12,8 @@
 {% endblock %}
 
 {% block skeletoncontent %}
-<div id="app" class="viewer no-script">
+<div id="app" class="viewer no-script"
+     style="background-image: url('{{ initial_state.page.image_url }}');">
   <div class="pswp pswp--open pswp--minimal--dark">
     <div class="pswp__bg" style="opacity: 1;"></div>
     <div class="pswp__scroll-wrap">
