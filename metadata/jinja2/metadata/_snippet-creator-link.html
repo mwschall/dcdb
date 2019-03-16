@@ -1,5 +1,8 @@
 {% if creator %}
 <a class="creator" href="{{ url('metadata:creator', args=[creator.pk]) }}">
   {%- if avatar == True and creator.avatar %}<img src="{{ thumburl('50x50', source=creator.avatar) }}" alt="Avatar of {{ creator }}"> {% endif %}
-  {%- if strong == True %}<strong>{{ creator }}</strong>{% else %}{{ creator }}{% endif %}</a>
+  {%- if strong == True %}<strong>{{ creator }}</strong>{% else %}{{ creator }}{% endif -%}
+</a>
+{%- set cc=creator.credit_count %}
+{%- if num_installments and cc and cc < num_installments %} ({{ cc }}){% endif %}
 {%- endif %}

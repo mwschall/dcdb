@@ -1,6 +1,7 @@
 import json
 from itertools import groupby
 
+import inflect as inflect
 from django import template
 from django.utils.encoding import force_text
 from django.utils.html import conditional_escape
@@ -9,6 +10,7 @@ from jinja2 import environmentfilter
 from jinja2.filters import make_attrgetter, _GroupTuple
 
 register = template.Library()
+p = inflect.engine()
 
 
 @register.filter
@@ -19,6 +21,11 @@ def page_num(page):
 @register.filter(name='json')
 def json_dumps(data):
     return mark_safe(json.dumps(data, separators=(',', ':')))
+
+
+@register.filter
+def inflect(value, func, *args):
+    return getattr(p, func)(value, *args)
 
 
 # https://stackoverflow.com/a/52749486

@@ -1,0 +1,8 @@
+<dl>
+{% with avatar=True %}
+{% for role, creators in credits %}
+  <dt>{{ role|inflect('plural', creators|length)|capitalize }}:</dt>
+  <dd>{% include 'metadata/_snippet-creator-list.html' %}</dd>
+{% endfor %}
+{% endwith %}
+</dl>

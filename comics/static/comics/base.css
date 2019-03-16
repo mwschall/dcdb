@@ -28,6 +28,19 @@
   margin-bottom: .5rem;
 }
 
+.credits dl {
+  overflow: hidden;
+}
+.credits dt,
+.credits dd {
+  float: left;
+  margin: 0 0 .5rem;
+}
+.credits dt {
+  clear: both;
+  width: 4em;
+}
+
 .issue p {
   line-height: 1.5rem;
   margin: 0;

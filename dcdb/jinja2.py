@@ -4,7 +4,7 @@ from django.urls import reverse
 from jinja2 import Environment
 from webpack_loader.templatetags.webpack_loader import render_bundle
 
-from comics.templatetags.comics_extras import page_num, oxford_comma, ugroupby
+from comics.templatetags.comics_extras import page_num, oxford_comma, ugroupby, inflect
 from comics.templatetags.image_extras import thumbgen, thumburl
 from metadata.templatetags.metadata_extras import role_summary
 
@@ -21,6 +21,7 @@ def environment(**options):
     })
     env.filters.update({
         'date': date,
+        'inflect': inflect,
         'json_script': json_script,
         'oxford_comma': oxford_comma,
         'page_num': page_num,

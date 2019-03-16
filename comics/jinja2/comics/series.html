@@ -3,6 +3,13 @@
 {% block content %}
 <article class="series">
 <h1>{{ series.name }}</h1>
+
+{% if credits %}
+<section class="credits">
+  {% include 'metadata/_snippet-credit-list.html' %}
+</section>
+{% endif %}
+
 <section class="issues">
   <ul class="flow_grid issue_grid">
   {% for issue in installments %}

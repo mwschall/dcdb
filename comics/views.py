@@ -1,32 +1,46 @@
 from itertools import groupby
 from operator import attrgetter
 
-import inflect
-from django.db.models import Count, Case, When, OuterRef, Exists
+from django.db.models import Count, Case, When, OuterRef, Exists, F
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.utils.translation import ugettext as _, ungettext
+from django.utils.translation import ugettext as _
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.response import Response
 
 from comics.serializers import PageSerializer, InstallmentSerializer, SeriesSerializer, StripInstallmentSerializer
-from metadata.models import Persona, Character
+from metadata.models import Persona, Character, Credit, Creator
 from .models import Installment, Page, Thread, Series
-
-p = inflect.engine()
 
 
 # See also: http://stackoverflow.com/questions/480214/
-def fmt_credit_list(credit_list):
-    if len({c.creator for c in credit_list}) == 1:
-        return [(_("by"), (credit_list[0].creator,))]
-    else:
-        raw = [
-            (str(r), tuple(map(lambda c: c.creator, cl)))
-            for r, cl in groupby(credit_list, lambda c: c.role)
-        ]
-        return [(ungettext(r, p.plural(r), len(el)), el) for r, el in raw]
+def gen_credit_list(credit_list):
+    pk_set = set()
+
+    def get_creator(entry):
+        if hasattr(entry, 'creator'):
+            c = entry.creator
+        else:
+            c = Creator(**{k.split('__')[1]: v
+                           for k, v in entry.items()
+                           if k.startswith('creator__')})
+        pk_set.add(c.pk)
+        try:
+            c.credit_count = entry.get('credit_count')
+        except AttributeError:
+            pass
+        return c
+
+    def get_role(entry):
+        if hasattr(entry, 'role'):
+            return str(entry.role)
+        return getattr(entry, 'role_name', entry.get('role_name'))
+
+    raw = [(rn, [get_creator(c) for c in cl])
+           for rn, cl in groupby(credit_list, get_role)]
+
+    return [(_("by"), raw[0][1][:1])] if len(pk_set) == 1 else raw
 
 
 def gen_base():
@@ -126,7 +140,7 @@ def installment_detail(request, installment):
 
     context = {
         'installment': installment,
-        'credits': fmt_credit_list(credit_list),
+        'credits': gen_credit_list(credit_list),
         'pages': installment.pages.all(),
         'appearances': appearances,
     }
@@ -163,7 +177,7 @@ def installment_page(request, installment, page_ord='next'):
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
 def series_detail(request, series):
-    series = get_object_or_404(Series, pk=series)
+    series = get_object_or_404(Series.display_objects, pk=series)
 
     if request.accepted_renderer.format == 'json':
         serializer = SeriesSerializer(instance=series)
@@ -173,10 +187,26 @@ def series_detail(request, series):
         }
         return Response(context)
 
-    installments = series.installments.order_by('-ordinal')
+    credit_list = Credit.objects \
+        .filter(installment__series=series) \
+        .values('role', 'creator') \
+        .annotate(role_name=F('role__name'),
+                  credit_count=Count(F('creator__pk'))) \
+        .order_by('role__order', '-credit_count', 'creator__working_name') \
+        .values('role_name',
+                'credit_count',
+                'creator__pk',
+                'creator__working_name',
+                'creator__avatar')
+
+    installments = series.installments \
+        .order_by('-ordinal') \
+        .iterator()
 
     context = {
         'series': series,
+        'credits': gen_credit_list(credit_list),
+        'num_installments': series.installment_count,
         'installments': installments,
     }
     return render(request, 'comics/series.html', context)
