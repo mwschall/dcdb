@@ -1,20 +1,26 @@
 import math
 import re
 from decimal import Decimal
+from io import BytesIO
+from os.path import splitext
 
+from PIL import Image
+from PyPDF2 import PdfFileReader
 from adminsortable2.admin import SortableInlineAdminMixin
 from django import forms
 from django.contrib import admin
 from django.contrib.admin import TabularInline
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.db import models
 from django.db import transaction
 from django.db.models import Window, F, Max
 from django.db.models.functions import RowNumber
 from django.forms import Textarea
 
-from comics.forms import NumeralField
-from comics.util import is_model_request
+from comics.forms import NumeralField, InstallmentFileField
+from comics.util import is_model_request, get_upload_fp
+from comics.validators import ARCHIVE_EXTS
 from .models import Installment, Series, Thread, ThreadSequence, Page, InstallmentLabel
 
 
@@ -27,8 +33,7 @@ def is_series_request(request):
 #########################################
 
 class InstallmentAdminForm(forms.ModelForm):
-    page_files = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={'multiple': True}),
+    page_files = InstallmentFileField(
         required=False,
     )
     number = NumeralField(
@@ -62,7 +67,19 @@ class InstallmentAdminForm(forms.ModelForm):
         super()._post_clean()
         if hasattr(self.files, 'getlist'):
             page_files = self.files.getlist('page_files')
-            if page_files:
+            if not page_files:
+                return
+
+            file_exts = {splitext(f.name)[1] for f in page_files}
+
+            if len(page_files) > 1 and file_exts & ARCHIVE_EXTS:
+                raise ValidationError('Only one archive file at a time is accepted.')
+
+            if '.pdf' in file_exts:
+                self.instance.page_count = PdfFileReader(get_upload_fp(page_files[0])).getNumPages()
+            elif '.zip' in file_exts:
+                raise ValidationError('Zip unpacking not implemented.')
+            else:
                 self.instance.page_count = len(page_files)
 
 
@@ -142,7 +159,7 @@ class InstallmentInline(SortableInlineAdminMixin, TabularInline):
 
 class SeriesAdminForm(forms.ModelForm):
     strip_files = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={'multiple': True}),
+        widget=forms.ClearableFileInput(attrs={'multiple': True, 'accept': 'image/*'}),
         required=False,
     )
 
@@ -198,6 +215,65 @@ class SeriesAdmin(admin.ModelAdmin):
 # Installment Admin                     #
 #########################################
 
+# https://stackoverflow.com/a/34116472
+def parse_pdf(pdf_file):
+    pages = []
+    pdf = PdfFileReader(get_upload_fp(pdf_file))
+
+    # TODO: shunt complex pages to poppler rather than erroring out
+    # TODO: make use of /ColorSpace resources in Pillow
+
+    for i, page in enumerate(pdf.pages):
+        x_object = page['/Resources']['/XObject'].getObject()
+
+        if '/Text' in page['/Resources']['/ProcSet']:
+            raise ValueError('Page %d specifies a /Text process.' % i)
+
+        obj = None
+        for o in x_object:
+            if x_object[o]['/Subtype'] == '/Image':
+                if obj:
+                    raise ValueError('Page %d has multiple images.' % i)
+                obj = o
+
+        if not obj:
+            raise ValueError('Page %d has no image.' % i)
+
+        fltr = x_object[obj]['/Filter']
+        size = (x_object[obj]['/Width'], x_object[obj]['/Height'])
+        data = x_object[obj].getData()
+        if x_object[obj]['/ColorSpace'] == '/DeviceRGB':
+            mode = "RGB"
+        else:
+            mode = "P"
+
+        buf = BytesIO()
+
+        if '/FlateDecode' in fltr:
+            x_object[obj] = Image.frombytes(mode, size, data)
+            x_object[obj].save(buf, 'PNG', optimize=True)
+            ext = ".pdf"
+            ct = 'image/png'
+        elif '/DCTDecode' in fltr:
+            buf.write(data)
+            ext = ".jpg"
+            ct = 'image/jpeg'
+        elif '/JPXDecode' in fltr:
+            buf.write(data)
+            ext = ".jpx"
+            ct = 'image/jpx'
+        else:
+            raise NotImplementedError('/Filter = %s not supported.' % fltr)
+
+        name = 'page_{:04d}{}'.format(i, ext)
+        pages.append({
+            'number': i,
+            'file': InMemoryUploadedFile(buf, None, name, ct, buf.tell(), None),
+        })
+
+    return pages, True
+
+
 @admin.register(Installment)
 class InstallmentAdmin(admin.ModelAdmin):
     form = InstallmentAdminForm
@@ -222,7 +298,11 @@ class InstallmentAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         page_files = request.FILES.getlist('page_files')
         if page_files:
-            pages, has_cover = parse_pages(page_files)
+            ext = splitext(page_files[0].name)[1]
+            if ext == '.pdf':
+                pages, has_cover = parse_pdf(page_files[0])
+            else:
+                pages, has_cover = parse_pages(page_files)
             pages.sort(key=lambda pi: pi['number'])
 
             obj.has_cover = has_cover

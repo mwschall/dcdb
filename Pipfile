@@ -15,6 +15,7 @@ django-webpack-loader = "*"
 djangorestframework = "*"
 inflect = "*"
 jinja2 = "*"
-shortuuid = "*"
 pillow = "*"
+pypdf2 = {editable = true,git = "https://github.com/mstamy2/PyPDF2.git",ref = "master"}
+shortuuid = "*"
 tldextract = "*"

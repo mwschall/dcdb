@@ -8,10 +8,11 @@ from pathlib import Path
 from PIL import Image
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.forms import FileInput, ImageField, RegexField, Widget
+from django.forms import FileInput, ImageField, RegexField, Widget, FileField, ClearableFileInput
 from django.utils.translation import gettext_lazy as _
 
-from comics.util import unpack_numeral, s_uuid
+from comics.util import unpack_numeral, s_uuid, get_upload_fp
+from comics.validators import validate_installment_extension
 
 CROPPIE_VERSION = '2.6.3'
 # TODO: install and manage croppie via npm
@@ -104,13 +105,7 @@ class CroppieField(ImageField):
             return f
 
         # gotta reopen because Image.verify() consumes the file pointer
-        if hasattr(data, 'temporary_file_path'):
-            file = data.temporary_file_path()
-        else:
-            if hasattr(data, 'read'):
-                file = BytesIO(data.read())
-            else:
-                file = BytesIO(data['content'])
+        file = get_upload_fp(data)
 
         # crop and save as optimized png for best-est qualities
         buf = BytesIO()
@@ -153,3 +148,7 @@ class NumeralField(RegexField):
         except (AttributeError, TypeError):
             return value
 
+
+class InstallmentFileField(FileField):
+    widget = ClearableFileInput(attrs={'multiple': True, 'accept': 'image/*,.pdf,.zip'})
+    default_validators = [validate_installment_extension]
