@@ -17,5 +17,6 @@ inflect = "*"
 jinja2 = "*"
 pillow = "*"
 pypdf2 = {editable = true,git = "https://github.com/mstamy2/PyPDF2.git",ref = "master"}
+pyvips = "*"
 shortuuid = "*"
 tldextract = "*"
