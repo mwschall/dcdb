@@ -124,8 +124,15 @@ def convert_pdf(pdf_file, page_info, dpi=300, ext='.png', **kwargs):
                                                dpi=dpi,
                                                n=-1,
                                                access="sequential")
+    elif hasattr(pdf_file, 'read'):
+        # need to read here because storage may not be local
+        pdf_file.seek(0)
+        all_pages = pyvips.Image.new_from_buffer(pdf_file.read(), "",
+                                                 dpi=dpi,
+                                                 n=-1,
+                                                 access="sequential")
     else:
-        raise NotImplementedError('No ctype buffer/memory support.')
+        raise NotImplementedError('Unsure how to access file.')
 
     # That'll be RGBA ... flatten out the alpha
     all_pages = all_pages.flatten(background=255)
@@ -141,7 +148,7 @@ def convert_pdf(pdf_file, page_info, dpi=300, ext='.png', **kwargs):
     content_type = mimetypes.guess_type('a'+ext)[0]
     height_accum = 0
     for i in range(0, n_pages):
-        print('Page {} at {}px'.format(i, height_accum))
+        print('Page {:04d} at {}px'.format(i+1, height_accum))
 
         # cut out our page
         width = pt2px(page_info[i]['width'], dpi)

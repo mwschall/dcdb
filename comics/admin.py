@@ -1,6 +1,5 @@
 import math
 from decimal import Decimal
-from os.path import splitext
 
 from adminsortable2.admin import SortableInlineAdminMixin
 from django import forms
@@ -15,8 +14,8 @@ from django.forms import Textarea
 
 from comics.forms import NumeralField, InstallmentFileField
 from comics.importers import parse_pages, parse_pdf, get_pfr
-from comics.util import is_model_request
-from comics.validators import ARCHIVE_EXTS
+from comics.util import is_model_request, get_ext_name
+from comics.validators import ARCHIVE_EXTS, IMAGE_EXTS
 from .models import Installment, Series, Thread, ThreadSequence, Page, InstallmentLabel
 
 
@@ -31,6 +30,8 @@ def is_series_request(request):
 class InstallmentAdminForm(forms.ModelForm):
     page_files = InstallmentFileField(
         required=False,
+        label='Upload file(s)',
+        help_text='Multiple raw image files, or one PDF, or a CBZ / ZIP archive.'
     )
     number = NumeralField(
         required=False,
@@ -66,14 +67,14 @@ class InstallmentAdminForm(forms.ModelForm):
             if not page_files:
                 return
 
-            file_exts = {splitext(f.name)[1] for f in page_files}
+            file_exts = {get_ext_name(f) for f in page_files}
 
             if len(page_files) > 1 and file_exts & set(ARCHIVE_EXTS):
                 raise ValidationError('Only one archive file at a time is accepted.')
 
-            if '.pdf' in file_exts:
+            if 'pdf' in file_exts:
                 self.instance.page_count = get_pfr(page_files[0]).getNumPages()
-            elif '.zip' in file_exts:
+            elif 'zip' in file_exts:
                 raise ValidationError('Zip unpacking not implemented.')
             else:
                 self.instance.page_count = len(page_files)
@@ -200,15 +201,24 @@ class InstallmentAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         page_files = request.FILES.getlist('page_files')
         if page_files:
-            ext = splitext(page_files[0].name)[1]
-            if ext == '.pdf':
-                page_gen = parse_pdf(page_files[0])
-            else:
-                page_gen = parse_pages(page_files)
+            archive = page_files[0]
+            ext = get_ext_name(archive)
+            if ext not in ARCHIVE_EXTS:
+                archive = None
 
-            obj.has_cover = next(page_gen)
+            obj.archive = archive
             obj.pages.all().delete()
             obj.save()
+
+            if ext in IMAGE_EXTS:
+                page_gen = parse_pages(page_files)
+            elif ext == 'pdf':
+                page_gen = parse_pdf(obj.archive)
+            else:
+                raise NotImplementedError('No CBZ / ZIP support yet.')
+
+            obj.has_cover = next(page_gen)
+            obj.save(update_fields=['has_cover'])
 
             idx = 0
             for file in page_gen:

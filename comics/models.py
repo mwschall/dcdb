@@ -1,4 +1,3 @@
-import os
 import re
 from io import BytesIO
 from itertools import chain
@@ -17,7 +16,7 @@ from django.utils.text import Truncator, capfirst
 
 from comics.expressions import SQCount
 from comics.fields import ShortUUIDField
-from comics.util import s_uuid, unpack_numeral
+from comics.util import s_uuid, unpack_numeral, get_sort_dir
 
 #########################################
 # Defines                               #
@@ -56,20 +55,39 @@ def get_ci_src_loc(instance, filename):
     return "raws/{}-{}{}".format(instance.id, s_uuid(), Path(filename).suffix)
 
 
+def get_series_loc(series):
+    return "series/{}/{} [{}]".format(get_sort_dir(series.name),
+                                      series.name,
+                                      series.pk)
+
+
+def get_inst_loc(installment):
+    if installment.number is not None:
+        name = unpack_numeral(installment.number,
+                              Installment.SECOND_NUMBER,
+                              fmt='{:04d}{}{:02d}')
+    else:
+        name = installment.title
+
+    return '{}/{}'.format(get_series_loc(installment.series),
+                          name)
+
+
+def gen_arch_loc(installment, filename):
+    return '{}/_originals/{}'.format(get_inst_loc(installment),
+                                     filename)
+
+
 # TODO: put this in the subclasses of SourceImage
 def gen_src_loc(instance, filename):
-    ext = os.path.splitext(filename)[1]
+    ext = Path(filename).suffix.lower()
     if isinstance(instance, Page):
-        return "installments/{}/{:04d}{}".format(
-            instance.installment.slug,
-            instance.order,
-            ext,
-        )
+        return "{}/{:04d}{}".format(get_inst_loc(instance.installment),
+                                    instance.order,
+                                    ext)
     else:
-        return "images/{}{}".format(
-            shortuuid.uuid(),
-            ext,
-        )
+        return "images/{}{}".format(shortuuid.uuid(),
+                                    ext)
 
 
 #########################################
@@ -334,6 +352,12 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
         editable=False,
     )
 
+    archive = models.FileField(
+        upload_to=gen_arch_loc,
+        editable=False,
+        null=True,
+    )
+
     class Meta:
         ordering = ['ordinal']
         unique_together = ('series', 'number', 'title')
@@ -381,11 +405,6 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
     def is_paginated(self):
         # TODO: this is stupidly inefficient
         return self.num_pages > 1
-
-    @property
-    def slug(self):
-        # TODO: this is SUPER busted and needs to depend on stable values
-        return "{}_{}".format(self.series.slug, self.ordinal)
 
     @property
     def prev_id(self):
