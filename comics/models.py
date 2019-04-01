@@ -11,7 +11,6 @@ from django.db.models import Q, OuterRef
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.urls import reverse
-from django.utils import timezone
 from django.utils.text import Truncator, capfirst
 
 from comics.expressions import SQCount
@@ -343,6 +342,7 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
     )
     has_cover = models.BooleanField(
         default=True,
+        help_text='Treat the first page (by order) as the cover.'
     )
     page = models.OneToOneField(
         'comics.Page',

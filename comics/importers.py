@@ -22,12 +22,10 @@ RE_NAME_SLICER = re.compile(r'^(?P<label>(?:[-_a-z\s]+(?:\d+[-_\s]+)?)?0*(?P<num
 #########################################
 
 def parse_pages(page_files):
-    has_cover = False
     pages = []
 
     for f in page_files:
         if re.search('cover', f.name):
-            has_cover = True
             pages.append({
                 'number': 0,
                 'file': f,
@@ -36,8 +34,6 @@ def parse_pages(page_files):
             m = RE_NAME_SLICER.search(f.name)
             if m:
                 number = int(m.group('number'))
-                if number is 0:
-                    has_cover = True
 
                 label = m.group('label')[1:]
                 if label[0] == 'i' or label[0] == 'p':
@@ -51,14 +47,10 @@ def parse_pages(page_files):
                     'file': f,
                 })
 
-    # assume single images are a strip or one-panel affair
-    if len(pages) <= 1:
-        has_cover = False
-
     pages.sort(key=lambda pi: pi['number'])
 
-    yield has_cover
-    yield from [p['file'] for p in pages]
+    for i, p in enumerate(pages):
+        yield i, p['file']
 
 
 #########################################
@@ -161,8 +153,7 @@ def convert_pdf(pdf_file, page_info, dpi=300, ext='.png', **kwargs):
         with TemporaryUploadedFile(name, content_type, 0, None) as file:
             page.write_to_file(file.temporary_file_path(), **kwargs)
             file.size = getsize(file.temporary_file_path())
-
-            yield file
+            yield i, file
 
 
 # https://stackoverflow.com/a/34116472
@@ -206,14 +197,12 @@ def rip_pdf(pdf_file, pfr):
 
         name = page_name(pdf_name, i, ext)
         content_type = mimetypes.guess_type(name)[0]
-        yield InMemoryUploadedFile(buf, None, name, content_type, buf.tell(), None)
+        yield i, InMemoryUploadedFile(buf, None, name, content_type, buf.tell(), None)
 
 
 def parse_pdf(pdf_file):
     pfr = get_pfr(pdf_file)
     page_info = [get_page_info(page) for page in pfr.pages]
-
-    yield True  # has_cover
 
     if any([not pi['simple'] for pi in page_info]):
         yield from convert_pdf(pdf_file, page_info, 150, ext='.jpg', Q=95)

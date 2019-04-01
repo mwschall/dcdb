@@ -181,7 +181,6 @@ class SeriesAdmin(admin.ModelAdmin):
 class InstallmentAdmin(admin.ModelAdmin):
     form = InstallmentAdminForm
     autocomplete_fields = ('series',)
-    readonly_fields = ('has_cover',)
 
     def get_changeform_initial_data(self, request):
         initial = super().get_changeform_initial_data(request)
@@ -217,17 +216,12 @@ class InstallmentAdmin(admin.ModelAdmin):
             else:
                 raise NotImplementedError('No CBZ / ZIP support yet.')
 
-            obj.has_cover = next(page_gen)
-            obj.save(update_fields=['has_cover'])
-
-            idx = 0
-            for file in page_gen:
+            for i, file in page_gen:
                 obj.pages.create(
-                    order=idx,
+                    order=i,
                     file=file,
                     original_name=file.name,
                 )
-                idx += 1
         else:
             obj.save()
 
