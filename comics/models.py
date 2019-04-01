@@ -338,7 +338,9 @@ class Installment(ImageFileMixin, ThreadMixin, models.Model):
         blank=True,
     )
     release_datetime = models.DateTimeField(
-        default=timezone.now
+        blank=True,
+        null=True,
+        help_text='Date / time of release, if known.'
     )
     has_cover = models.BooleanField(
         default=True,

@@ -26,7 +26,9 @@
       {% if issue.title %}
       <p class="issue_name">{{ issue.title }}</p>
       {% endif %}
+      {% if issue.release_datetime %}
       <p class="issue_date">{{ issue.release_datetime|date('SHORT_DATE_FORMAT') }}</p>
+      {% endif %}
     </a>
     </li>
   {% endfor %}
