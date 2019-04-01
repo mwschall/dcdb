@@ -15,7 +15,7 @@ from django.utils.text import Truncator, capfirst
 
 from comics.expressions import SQCount
 from comics.fields import ShortUUIDField
-from comics.util import s_uuid, unpack_numeral, get_sort_dir
+from comics.util import s_uuid, unpack_numeral, get_sort_dir, clean_dirname, clean_filename
 
 #########################################
 # Defines                               #
@@ -55,8 +55,9 @@ def get_ci_src_loc(instance, filename):
 
 
 def get_series_loc(series):
-    return "series/{}/{} [{}]".format(get_sort_dir(series.name),
-                                      series.name,
+    dirname = clean_dirname(series.name)
+    return "series/{}/{} [{}]".format(get_sort_dir(dirname),
+                                      dirname,
                                       series.pk)
 
 
@@ -66,7 +67,7 @@ def get_inst_loc(installment):
                               Installment.SECOND_NUMBER,
                               fmt='{:04d}{}{:02d}')
     else:
-        name = installment.title
+        name = clean_dirname(installment.title)
 
     return '{}/{}'.format(get_series_loc(installment.series),
                           name)
@@ -74,7 +75,7 @@ def get_inst_loc(installment):
 
 def gen_arch_loc(installment, filename):
     return '{}/_originals/{}'.format(get_inst_loc(installment),
-                                     filename)
+                                     clean_filename(filename))
 
 
 # TODO: put this in the subclasses of SourceImage
