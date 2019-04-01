@@ -271,7 +271,7 @@ class InstallmentAdmin(admin.ModelAdmin):
         # insert object right after its natural predecessor
         obj.series.installments \
             .filter(ordinal__gte=obj_ordinal) \
-            .update(ordinal=F('order') + 1)
+            .update(ordinal=F('ordinal') + 1)
         obj.ordinal = obj_ordinal
         obj.save(update_fields=['ordinal'])
 
