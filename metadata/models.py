@@ -40,14 +40,14 @@ APPEARANCE_TYPE_CHOICES = (
 
 # https://fontawesome.com/icons?d=gallery&s=brands
 DOMAIN_ICON_MAP = {
-    'blogger': 'blogger',
-    'blogspot': 'blogger',
+    'blogger': 'blogger-b',
+    'blogspot': 'blogger-b',
     'deviantart': 'deviantart',
     'facebook': 'facebook',
     'flickr': 'flickr',
     'instagram': 'instagram',
     'patreon': 'patreon',
-    'tumblr': '-square',
+    'tumblr': 'tumblr',
     'twitter': 'twitter',
 }
 
