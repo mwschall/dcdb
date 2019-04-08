@@ -7,16 +7,19 @@ from django.db import migrations
 
 ROLES = (
     ['writer'],
+    ['story'],
 
     ['artist'],
+    ['cover'],
+
+    ['lines'],
     ['inker'],
     ['colorist'],
     ['post'],
-    ['typesetter'],
-
-    ['cover'],
+    ['letterer'],
 
     ['editor'],
+    ['translator'],
 )
 
 
