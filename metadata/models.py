@@ -8,6 +8,8 @@ from django.utils.functional import cached_property
 from django.utils.text import capfirst
 from tldextract import extract as urlextract
 
+from comics.fields import ShortUUIDMixin
+
 #########################################
 # Defines                               #
 #########################################
@@ -56,7 +58,7 @@ DOMAIN_ICON_MAP = {
 # Creators and Roles                    #
 #########################################
 
-class Creator(models.Model):
+class Creator(ShortUUIDMixin, models.Model):
     working_name = models.CharField(
         max_length=100,
         unique=True,
@@ -97,6 +99,9 @@ class Creator(models.Model):
 
     def __str__(self):
         return self.working_name
+
+    def get_absolute_url(self):
+        return reverse('metadata:creator', args=[self.pk])
 
     def clean(self):
         # Note: DO NOT destroy inner white spacing as a matter of courtesy.
@@ -197,7 +202,7 @@ class Classification(models.Model):
         self.name = ' '.join(self.name.split()).lower()
 
 
-class Character(models.Model):
+class Character(ShortUUIDMixin, models.Model):
     primary_persona = models.OneToOneField(
         'metadata.Persona',
         related_name='primary_for',
@@ -263,7 +268,7 @@ class PersonaDisplayManager(models.Manager):
             .annotate(cls_name=F('classification__name'))
 
 
-class Persona(models.Model):
+class Persona(ShortUUIDMixin, models.Model):
     character = models.ForeignKey(
         'metadata.Character',
         related_name='personas',

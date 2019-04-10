@@ -14,7 +14,7 @@ from django.urls import reverse
 from django.utils.text import Truncator, capfirst
 
 from comics.expressions import SQCount
-from comics.fields import ShortUUIDField
+from comics.fields import ShortUUIDMixin
 from comics.util import s_uuid, unpack_numeral, get_sort_dir, clean_dirname, clean_filename
 
 #########################################
@@ -109,8 +109,7 @@ class ImageFileMixin(object):
         return self.safe_file.height
 
 
-class GenericImage(ImageFileMixin, models.Model):
-    id = ShortUUIDField(primary_key=True)
+class GenericImage(ImageFileMixin, ShortUUIDMixin, models.Model):
     scaled = models.ImageField(
         upload_to=get_ci_loc,
         width_field='scaled_width',
@@ -249,7 +248,7 @@ class SeriesDisplayManager(models.Manager):
             .annotate(installment_count=Series.installment_count_sq())
 
 
-class Series(ThreadMixin, models.Model):
+class Series(ShortUUIDMixin, ThreadMixin, models.Model):
     name = models.CharField(
         max_length=200,
     )
@@ -288,7 +287,7 @@ class Series(ThreadMixin, models.Model):
         verbose_name_plural = "series"
 
     def __str__(self):
-        return "{} [{}]".format(self.name, self.slug)
+        return "{} [{}]".format(self.name, self.pk)
 
     def get_absolute_url(self):
         if self.is_strip:
@@ -309,7 +308,7 @@ class Series(ThreadMixin, models.Model):
                        )
 
 
-class Installment(ImageFileMixin, ThreadMixin, models.Model):
+class Installment(ImageFileMixin, ShortUUIDMixin, ThreadMixin, models.Model):
     # NOTE: changing these may require a DB migration
     FIRST_NUMBER = 5
     SECOND_NUMBER = 5
@@ -492,7 +491,7 @@ class Page(SourceImage):
 # Threads                               #
 #########################################
 
-class Thread(models.Model):
+class Thread(ShortUUIDMixin, models.Model):
     name = models.CharField(
         max_length=200,
         unique=True,

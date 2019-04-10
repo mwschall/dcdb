@@ -77,7 +77,7 @@ def creator_index(request):
 
 @api_view(['GET'])
 def creator_page(request, creator):
-    creator = get_object_or_404(Creator, id=creator)
+    creator = get_object_or_404(Creator, pk=creator)
 
     # show only primary if is created by, else list each Persona individually
     characters = Persona.objects \

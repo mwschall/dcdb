@@ -13,11 +13,13 @@ VALID_FILENAME_CHARS = "-_.()#&~' %s%s" % (string.ascii_letters, string.digits)
 # NOTE: allowing a few more here than is typical
 
 
+DEFAULT_UUID_LEN = 8  # ~1 trillion with the default alphabet
 DEFAULT_UUID_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
 DEFAULT_SHORTUUID = shortuuid.ShortUUID(alphabet=DEFAULT_UUID_ALPHABET)
+# NOTE: changing these in Production would be... problematic
 
 
-def s_uuid(length=22):
+def s_uuid(length=DEFAULT_UUID_LEN):
     return DEFAULT_SHORTUUID.uuid()[:length]
 
 
