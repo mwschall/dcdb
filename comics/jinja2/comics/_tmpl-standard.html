@@ -1,7 +1,7 @@
 {% extends 'comics/_tmpl-base.html' %}
 
 {% block skeletoncontent %}
-<header class="page-header">
+<header class="site">
   <h1><a href="{{ url('comics:index') }}">Digital Comic DB</a></h1>
 </header>
 
@@ -9,4 +9,8 @@
   {% block content %}
   {% endblock %}
 </main>
+
+<footer class="site">
+  <p class="attribution">All content is Copyright © its respective creator, owner, or publisher.</p>
+</footer>
 {% endblock %}
