@@ -1,5 +1,5 @@
 {% if persona %}
-<a class="appearance" href="{{ url('metadata:character', args=[persona.character_id]) }}">
+<a class="appearance" href="{{ persona.get_absolute_url() }}">
   {%- if avatar == True and persona.mugshot %}<img src="{{ thumburl('50x50', source=persona.mugshot) }}" alt="Mugshot for {{ persona }}"> {% endif %}
   {{- persona }}{% if persona.also_as %} ({{ persona.also_as|join(" / ") }}){% endif %}</a>
 {%- endif %}

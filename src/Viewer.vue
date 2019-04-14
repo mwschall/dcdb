@@ -20,13 +20,13 @@ div.viewer#app
 </template>
 
 <script>
-import _ from 'lodash'
-import axios from 'axios'
+  import _ from 'lodash'
+  import axios from 'axios'
 
-import ScrubberBar from './ScrubberBar.vue'
-import Viewport from './PhotoSwipe.vue'
+  import ScrubberBar from './ScrubberBar.vue'
+  import Viewport from './PhotoSwipe.vue'
 
-function parsePage (page) {
+  function parsePage (page) {
   return Object.assign({
     src: page.image_url,
     w: page.image_width,
@@ -121,7 +121,7 @@ export default {
       if (type) {
         return {
           name: type,
-          params: _.pick(route.params, [type]),
+          params: _.pick(route.params, [type, 'series']),
         }
       }
       return null

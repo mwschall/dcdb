@@ -1,8 +1,8 @@
 from itertools import groupby
 from operator import attrgetter
 
-from django.db.models import Count, Case, When, OuterRef, Exists, F
-from django.shortcuts import render, get_object_or_404
+from django.db.models import Count, Case, When, OuterRef, Exists, F, Q
+from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.translation import ugettext as _
 from rest_framework.decorators import api_view, renderer_classes
@@ -44,7 +44,7 @@ def gen_credit_list(credit_list):
 
 
 def gen_base():
-    return reverse('comics:index')
+    return '/'
 
 
 def gen_page_links(page):
@@ -84,6 +84,19 @@ def gen_thread_links(instance):
             }
 
 
+def get_series_or_404(series, *args, **kwargs):
+    return get_object_or_404(Series.display_objects,
+                             Q(pk=series) | Q(slug=series),
+                             *args, **kwargs)
+
+
+def get_inst_or_404(series, number=None, ordinal=None, **_):
+    if 'number' is not None:
+        return get_object_or_404(Installment, series=series, number=number)
+    else:
+        return get_object_or_404(Installment, series=series, ordinal=ordinal)
+
+
 @api_view(['GET'])
 def index(request):
     threads = Thread.objects.all()
@@ -97,10 +110,16 @@ def index(request):
     return render(request, 'comics/index.html', context)
 
 
+def installment_redirect(request, installment):
+    installment = get_object_or_404(Installment, pk=installment)
+    return redirect(installment.get_absolute_url())
+
+
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
-def installment_detail(request, installment):
-    installment = get_object_or_404(Installment, pk=installment)
+def installment_detail(request, series, **kwargs):
+    series = get_series_or_404(series)
+    installment = get_inst_or_404(series, **kwargs)
 
     if request.accepted_renderer.format == 'json':
         serializer = InstallmentSerializer(instance=installment)
@@ -139,6 +158,7 @@ def installment_detail(request, installment):
                          key=attrgetter('app_total'), reverse=True)
 
     context = {
+        'series': series,
         'installment': installment,
         'credits': gen_credit_list(credit_list),
         'pages': installment.pages.all(),
@@ -147,16 +167,22 @@ def installment_detail(request, installment):
     return Response(context, template_name='comics/installment.html')
 
 
+def page_redirect(request, installment, page):
+    installment = get_object_or_404(Installment, pk=installment)
+    page = get_object_or_404(Page, installment=installment, order=page)
+    return redirect(page.get_absolute_url())
+
+
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
-def installment_page(request, installment, page_ord='next'):
-    if page_ord is 'next':
-        installment = get_object_or_404(Installment, pk=installment)
-        page = installment.pages.last()
-        print(page.order)
+def installment_page(request, series, **kwargs):
+    series = get_series_or_404(series)
+    installment = get_inst_or_404(series, **kwargs)
+
+    if 'page' in kwargs:
+        page = get_object_or_404(Page, installment=installment, order=kwargs['page'])
     else:
-        page = get_object_or_404(Page, installment=installment, order=page_ord)
-        installment = page.installment
+        page = installment.pages.last()
 
     serializer = PageSerializer(instance=page)
 
@@ -177,7 +203,7 @@ def installment_page(request, installment, page_ord='next'):
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
 def series_detail(request, series):
-    series = get_object_or_404(Series.display_objects, pk=series)
+    series = get_series_or_404(series)
 
     if request.accepted_renderer.format == 'json':
         serializer = SeriesSerializer(instance=series)
@@ -214,10 +240,10 @@ def series_detail(request, series):
 
 @api_view(['GET'])
 @renderer_classes([TemplateHTMLRenderer, JSONRenderer])
-def strip_page(request, series, page_ord):
-    series = get_object_or_404(Series, pk=series, is_strip=True)
+def strip_page(request, series, page):
+    series = get_series_or_404(series, is_strip=True)
 
-    idx = int(page_ord)
+    idx = int(page)
     ins = series.pages[idx]
 
     serializer = StripInstallmentSerializer(instance=ins)

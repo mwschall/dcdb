@@ -1,6 +1,6 @@
 from django.db.models import F, Exists, OuterRef, Q, Count
 from django.db.models.query import Prefetch
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from rest_framework.decorators import api_view
 
 from comics.expressions import GroupConcat
@@ -23,8 +23,12 @@ def character_index(request):
 
 
 @api_view(['GET'])
-def character_page(request, character):
+def character_page(request, character, slug_name=None):
     character = get_object_or_404(Character.objects, pk=character)
+
+    if slug_name != character.slug:
+        return redirect(character.get_absolute_url())
+
     first_pages = Page.objects.filter(order=0)
     first_issues = Installment.objects \
         .prefetch_related(Prefetch('pages', queryset=first_pages)) \
@@ -76,8 +80,11 @@ def creator_index(request):
 
 
 @api_view(['GET'])
-def creator_page(request, creator):
+def creator_page(request, creator, slug_name=None):
     creator = get_object_or_404(Creator, pk=creator)
+
+    if slug_name != creator.slug:
+        return redirect(creator.get_absolute_url(), permanent=True)
 
     # show only primary if is created by, else list each Persona individually
     characters = Persona.objects \

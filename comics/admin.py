@@ -125,14 +125,7 @@ class SeriesAdminForm(forms.ModelForm):
 
     class Meta:
         model = Series
-        fields = (
-            'name',
-            'slug',
-            'installment_label',
-            'flip_direction',
-            'strip_files',
-            'is_strip',
-        )
+        fields = '__all__'
 
 
 @admin.register(Series)
@@ -140,6 +133,16 @@ class SeriesAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     form = SeriesAdminForm
     inlines = [InstallmentInline]
+
+    prepopulated_fields = {'slug': ('name',)}
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'slug')
+        }),
+        ('Installment Configuration', {
+            'fields': ('installment_label', 'flip_direction')
+        }),
+    )
 
     @transaction.atomic
     def save_model(self, request, obj, form, change):

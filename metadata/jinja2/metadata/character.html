@@ -24,11 +24,11 @@
   {% for issue in first_issues %}
     <li class="flow_cell">
     {% if issue.has_cover %}
-      <a class="issue" href="{{ url('comics:series', args=[issue.series_id]) }}">
+      <a class="issue" href="{{ issue.series.get_absolute_url() }}">
         <img class="issue_cover" src="{{ issue.cover.image_url }}" alt="Cover for {{ issue.series_name }}">
       </a>
     {% else %}
-      <a class="issue no_cover" href="{{ url('comics:series', args=[issue.series_id]) }}">
+      <a class="issue no_cover" href="{{ issue.series.get_absolute_url() }}">
         <h3 class="title">{{ issue.series_name }}</h3>
       </a>
     {% endif %}

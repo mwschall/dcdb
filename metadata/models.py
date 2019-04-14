@@ -9,6 +9,7 @@ from django.utils.text import capfirst
 from tldextract import extract as urlextract
 
 from comics.fields import ShortUUIDMixin
+from comics.util import slugify_name
 
 #########################################
 # Defines                               #
@@ -82,6 +83,10 @@ class Creator(ShortUUIDMixin, models.Model):
         related_name='creators',
     )
 
+    @property
+    def slug(self):
+        return slugify_name(self.working_name)
+
     @cached_property
     def social_urls(self):
         urls = [{'href': u.link, 'icon': u.icon_name}
@@ -101,7 +106,7 @@ class Creator(ShortUUIDMixin, models.Model):
         return self.working_name
 
     def get_absolute_url(self):
-        return reverse('metadata:creator', args=[self.pk])
+        return reverse('metadata:creator', args=[self.pk, self.slug])
 
     def clean(self):
         # Note: DO NOT destroy inner white spacing as a matter of courtesy.
@@ -223,6 +228,10 @@ class Character(ShortUUIDMixin, models.Model):
         return primary.name if primary else '(New)'
 
     @property
+    def slug(self):
+        return slugify_name(self.primary_persona.name)
+
+    @property
     def aka(self):
         return self.personas.exclude(pk=self.primary_persona.pk)
 
@@ -242,7 +251,7 @@ class Character(ShortUUIDMixin, models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse('metadata:character', args=[self.pk])
+        return reverse('metadata:character', args=[self.pk, self.slug])
 
 
 class CharacterUrl(models.Model):

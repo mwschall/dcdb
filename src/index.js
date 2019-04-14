@@ -16,10 +16,10 @@ const jsonNode = document.querySelector('#__INITIAL_STATE__')
 const INITIAL_STATE = JSON.parse(jsonNode.textContent || '{}')
 
 const routes = [
-  { path: '/installment/:installment/page/:page', component: Viewer, name: 'installment:page' },
-  { path: '/installment/:installment/next', component: Viewer, name: 'installment:next' },
-  { path: '/installment/:installment', name: 'installment' },
-  { path: '/strip/:strip/page/:page', component: Viewer, name: 'strip:page' },
+  { path: '/series/:series/:installment/p:page', component: Viewer, name: 'installment:page' },
+  { path: '/series/:series/:installment/next', component: Viewer, name: 'installment:next' },
+  { path: '/series/:series/:installment', name: 'installment' },
+  { path: '/strip/:strip/p:page', component: Viewer, name: 'strip:page' },
   { path: '/strip/:strip', name: 'strip' },
 ]
 

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "36962c084486dc17bb8c346a949670962e64d05565c4e4a1abaed21e44c42d9f"
+            "sha256": "743ec2da996ac2702b9736dff282318514d11b58ec5984bfd2d62f8d56efd1da"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -232,12 +232,19 @@
             "git": "https://github.com/mstamy2/PyPDF2.git",
             "ref": "18a2627adac13124d4122c8b92aaa863ccfb8c29"
         },
+        "python-slugify": {
+            "hashes": [
+                "sha256:57163ffb345c7e26063435a27add1feae67fa821f1ef4b2f292c25847575d758"
+            ],
+            "index": "pypi",
+            "version": "==3.0.2"
+        },
         "pytz": {
             "hashes": [
-                "sha256:32b0891edff07e28efe91284ed9c31e123d84bea3fd98e1f72be2508f43ef8d9",
-                "sha256:d5f05e487007e29e03409f9398d074e158d920d36eb82eaf66fb1136b0c5374c"
+                "sha256:303879e36b721603cc54604edcac9d20401bdbe31e1e4fdee5b9f98d5d31dfda",
+                "sha256:d747dd3d23d77ef44c6a3526e274af6efeb0a6f1afd5a69ba4d5be4098c8e141"
             ],
-            "version": "==2018.9"
+            "version": "==2019.1"
         },
         "pyvips": {
             "hashes": [
@@ -280,6 +287,13 @@
                 "sha256:7c3dca29c022744e95b547e867cee89f4fce4373f3549ccd8797d8eb52cdb873"
             ],
             "version": "==0.3.0"
+        },
+        "text-unidecode": {
+            "hashes": [
+                "sha256:5a1375bb2ba7968740508ae38d92e1f889a0832913cb1c447d5e2046061a396d",
+                "sha256:801e38bd550b943563660a91de8d4b6fa5df60a542be9093f7abf819f86050cc"
+            ],
+            "version": "==1.2"
         },
         "tldextract": {
             "hashes": [

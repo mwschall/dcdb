@@ -4,7 +4,7 @@
 <article class="installment">
 {% with avatar=True %}
   <h1>
-    <a href="{{ url('comics:series', args=[installment.series_id]) }}">{{ installment.series.name }}</a>
+    <a href="{{ series.get_absolute_url() }}">{{ installment.series.name }}</a>
     {%- if installment.display_number %} » <span class="number">{{ installment.display_number }}</span>
     {% endif %}
   </h1>

@@ -1,17 +1,13 @@
 import math
 import re
-import string
-import unicodedata
 from decimal import Decimal, InvalidOperation
+from functools import partial
 from io import BytesIO
 from pathlib import Path
 
 import shortuuid
 from django.contrib.contenttypes.models import ContentType
-
-VALID_FILENAME_CHARS = "-_.()#&~' %s%s" % (string.ascii_letters, string.digits)
-# NOTE: allowing a few more here than is typical
-
+from slugify import slugify
 
 DEFAULT_UUID_LEN = 8  # ~1 trillion with the default alphabet
 DEFAULT_UUID_ALPHABET = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ'
@@ -23,6 +19,14 @@ def s_uuid(length=DEFAULT_UUID_LEN):
     return DEFAULT_SHORTUUID.uuid()[:length]
 
 
+# TODO: handle negatives
+def pack_numeral(a, b, decimal_places):
+    a = Decimal(a)
+    b = Decimal(b or 0) / pow(10, decimal_places)
+    return a + b
+
+
+# TODO: handle negatives
 def unpack_numeral(value, decimal_places, spacer='.', fmt='{}{}{}'):
     try:
         value = Decimal(value)
@@ -51,32 +55,6 @@ def get_sort_dir(name):
     return m[0].upper() if m else '#'
 
 
-# https://gist.github.com/wassname/1393c4a57cfcbf03641dbc31886123b8
-def clean_filename(filename, whitelist=VALID_FILENAME_CHARS, replace=' ', char_limit=255):
-    # replace certain chars
-    if replace:
-        for r in replace:
-            filename = filename.replace(r, '_')
-
-    # keep only valid ascii chars
-    cleaned_filename = unicodedata.normalize('NFKD', filename).encode('ASCII', 'ignore').decode()
-
-    # keep only whitelisted chars
-    cleaned_filename = ''.join(c for c in cleaned_filename if c in whitelist)
-
-    # truncate if requested
-    if char_limit:
-        if len(cleaned_filename) > char_limit:
-            print("Warning, filename truncated because it was over {}. "
-                  "Filenames may no longer be unique".format(char_limit))
-        return cleaned_filename[:char_limit]
-    return cleaned_filename
-
-
-def clean_dirname(filename, whitelist=VALID_FILENAME_CHARS, replace=None, char_limit=None):
-    return clean_filename(filename, whitelist=whitelist, replace=replace, char_limit=char_limit)
-
-
 def get_upload_fp(data):
     if hasattr(data, 'temporary_file_path'):
         return data.temporary_file_path()
@@ -85,3 +63,9 @@ def get_upload_fp(data):
             return BytesIO(data.read())
         else:
             return BytesIO(data['content'])
+
+
+# Would prefer awesome-slugify, but it relies on unidecode (GPL) and hasn't been
+# updated in a while. Maybe just roll a combination of the two at some point...
+slugify_filename = partial(slugify, max_length=250, separator='_', lowercase=False)
+slugify_name = partial(slugify, lowercase=False)

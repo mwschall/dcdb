@@ -1,6 +1,5 @@
 import json
 import re
-from decimal import Decimal
 from io import BytesIO
 from json import JSONDecodeError
 from pathlib import Path
@@ -11,7 +10,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.forms import FileInput, ImageField, RegexField, Widget, FileField, ClearableFileInput
 from django.utils.translation import gettext_lazy as _
 
-from comics.util import unpack_numeral, s_uuid, get_upload_fp
+from comics.util import unpack_numeral, s_uuid, get_upload_fp, pack_numeral
 from comics.validators import validate_installment_extension
 
 CROPPIE_VERSION = '2.6.3'
@@ -142,9 +141,7 @@ class NumeralField(RegexField):
         value = super().to_python(data)
         try:
             m = re.match(self.regex, value)
-            a = Decimal(m.group(1))
-            b = Decimal(m.group(2) or 0) / pow(10, self.decimal_places)
-            return a + b
+            return pack_numeral(m.group(1), m.group(2), self.decimal_places)
         except (AttributeError, TypeError):
             return value
 

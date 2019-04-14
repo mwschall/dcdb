@@ -15,7 +15,8 @@ from django.utils.text import Truncator, capfirst
 
 from comics.expressions import SQCount
 from comics.fields import ShortUUIDMixin
-from comics.util import s_uuid, unpack_numeral, get_sort_dir, clean_dirname, clean_filename
+from comics.util import s_uuid, unpack_numeral, get_sort_dir, slugify_filename
+from comics.validators import validate_not_suuid
 
 #########################################
 # Defines                               #
@@ -55,7 +56,7 @@ def get_ci_src_loc(instance, filename):
 
 
 def get_series_loc(series):
-    dirname = clean_dirname(series.name)
+    dirname = slugify_filename(series.name)
     return "series/{}/{} [{}]".format(get_sort_dir(dirname),
                                       dirname,
                                       series.pk)
@@ -67,15 +68,17 @@ def get_inst_loc(installment):
                               Installment.SECOND_NUMBER,
                               fmt='{:04d}{}{:02d}')
     else:
-        name = clean_dirname(installment.title)
+        name = slugify_filename(installment.title)
 
     return '{}/{}'.format(get_series_loc(installment.series),
                           name)
 
 
 def gen_arch_loc(installment, filename):
-    return '{}/_originals/{}'.format(get_inst_loc(installment),
-                                     clean_filename(filename))
+    fnp = Path(filename)
+    return '{}/_originals/{}{}'.format(get_inst_loc(installment),
+                                       slugify_filename(fnp.stem),
+                                       fnp.suffix)
 
 
 # TODO: put this in the subclasses of SourceImage
@@ -250,12 +253,15 @@ class SeriesDisplayManager(models.Manager):
 
 class Series(ShortUUIDMixin, ThreadMixin, models.Model):
     name = models.CharField(
-        max_length=200,
+        max_length=250,
+        help_text='The core name / title on the "cover" of all Installments.'
     )
     slug = models.SlugField(
-        allow_unicode=True,
-        max_length=20,
+        max_length=50,
         unique=True,
+        allow_unicode=True,
+        validators=[validate_not_suuid],
+        help_text='Part of the URL path. Leave blank to use internal ID.'
     )
     is_strip = models.BooleanField(
         default=False,
@@ -273,7 +279,13 @@ class Series(ShortUUIDMixin, ThreadMixin, models.Model):
     )
 
     @property
+    def uuid(self):
+        # there should be no overlap between these two value sets
+        return self.slug or self.pk
+
+    @property
     def first_cover(self):
+        # TODO: what if the first few Installments don't have a cover?
         return self.installments.first().cover
 
     @property
@@ -287,12 +299,14 @@ class Series(ShortUUIDMixin, ThreadMixin, models.Model):
         verbose_name_plural = "series"
 
     def __str__(self):
-        return "{} [{}]".format(self.name, self.pk)
+        return "{} [{}]".format(self.name, self.uuid)
+
+    def get_url_kwargs(self):
+        return {'series': self.uuid}
 
     def get_absolute_url(self):
-        if self.is_strip:
-            return reverse('comics:strip', args=[self.pk])
-        return reverse('comics:series', args=[self.pk])
+        url_name = 'comics:strip' if self.is_strip else 'comics:series'
+        return reverse(url_name, kwargs=self.get_url_kwargs())
 
     @property
     def pages(self):
@@ -367,8 +381,16 @@ class Installment(ImageFileMixin, ShortUUIDMixin, ThreadMixin, models.Model):
     def __str__(self):
         return self.name
 
+    def get_url_kwargs(self):
+        kwargs = self.series.get_url_kwargs()
+        if self.number is not None:
+            kwargs['number'] = self.number
+        else:
+            kwargs['ordinal'] = self.ordinal
+        return kwargs
+
     def get_absolute_url(self):
-        return reverse('comics:installment', args=[self.pk])
+        return reverse('comics:installment', kwargs=self.get_url_kwargs())
 
     @property
     def numeral(self):
@@ -475,8 +497,13 @@ class Page(SourceImage):
     def __str__(self):
         return "{}".format(self.order)
 
+    def get_url_kwargs(self):
+        kwargs = self.installment.get_url_kwargs()
+        kwargs['page'] = self.order
+        return kwargs
+
     def get_absolute_url(self):
-        return reverse('comics:page', args=[self.installment_id, self.order])
+        return reverse('comics:page', kwargs=self.get_url_kwargs())
 
     @property
     def is_cover(self):

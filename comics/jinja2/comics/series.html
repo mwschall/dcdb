@@ -14,7 +14,7 @@
   <ul class="flow_grid issue_grid">
   {% for issue in installments %}
     <li class="flow_cell">
-    <a class="issue{% if not issue.has_cover %} no_cover{% endif %}" href="{{ url('comics:installment', args=[issue.pk]) }}">
+    <a class="issue{% if not issue.has_cover %} no_cover{% endif %}" href="{{ issue.get_absolute_url() }}">
       {% if issue.has_cover %}
       <img class="issue_cover" src="{{ issue.cover.image_url }}" alt="Cover for {{ issue.name }}">
       {% else %}
