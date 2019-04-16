@@ -563,9 +563,6 @@ class ThreadSequence(models.Model):
         'comics.Thread',
         on_delete=models.CASCADE,
     )
-    order = models.PositiveSmallIntegerField(
-        default=0,
-    )
     installment = models.ForeignKey(
         'comics.Installment',
         on_delete=models.PROTECT,
@@ -577,6 +574,9 @@ class ThreadSequence(models.Model):
     end_page = models.PositiveSmallIntegerField(
         blank=True,
         null=True,
+    )
+    order = models.PositiveSmallIntegerField(
+        default=0,
     )
 
     class Meta:

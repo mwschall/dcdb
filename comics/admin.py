@@ -4,7 +4,6 @@ from decimal import Decimal
 from adminsortable2.admin import SortableInlineAdminMixin
 from django import forms
 from django.contrib import admin
-from django.contrib.admin import TabularInline
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db import transaction
@@ -103,7 +102,7 @@ class InstallmentLabelAdmin(admin.ModelAdmin):
 # Series Admin                          #
 #########################################
 
-class InstallmentInline(SortableInlineAdminMixin, TabularInline):
+class InstallmentInline(SortableInlineAdminMixin, admin.TabularInline):
     model = Installment
     form = InstallmentAdminForm
     max_num = 0
@@ -182,6 +181,7 @@ class SeriesAdmin(admin.ModelAdmin):
 
 @admin.register(Installment)
 class InstallmentAdmin(admin.ModelAdmin):
+    search_fields = ('series__name', 'series__slug', 'number', 'title')
     form = InstallmentAdminForm
     autocomplete_fields = ('series',)
 
@@ -277,9 +277,10 @@ class InstallmentAdmin(admin.ModelAdmin):
 # Thread Admin                          #
 #########################################
 
-class ThreadSequenceInline(TabularInline):
+class ThreadSequenceInline(SortableInlineAdminMixin, admin.TabularInline):
     model = ThreadSequence
     extra = 1
+    autocomplete_fields = ('installment',)
 
 
 @admin.register(Thread)
