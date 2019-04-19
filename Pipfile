@@ -6,7 +6,7 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-django = ">=2.1"
+django = "<2.2,>=2.1"
 django-admin-sortable2 = "*"
 django-cleanup = "*"
 django-debug-toolbar = "*"
@@ -14,7 +14,7 @@ django-imagekit = "*"
 django-webpack-loader = "*"
 djangorestframework = "*"
 inflect = "*"
-jinja2 = "*"
+jinja2 = ">=2.10.1"
 pillow = "*"
 pypdf2 = {editable = true,git = "https://github.com/mstamy2/PyPDF2.git",ref = "master"}
 pyvips = "*"
